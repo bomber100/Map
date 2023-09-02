@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Map
+{% endblock %}
+
+{% block load%}onload = "loadMap()"{% endblock %}
+
+{% block body %}
+        <div id = "map" style = "width:800px; height:600px; margin: auto;" {{ visibility }}></div>
+        <script>
+            function loadMap() {
+              // Initialize Google Maps
+                var initLatLng = {lat: 49.844, lng: 24.01}
+                const mapOptions = {
+                    center: initLatLng,
+                    zoom: 13.5,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                }
+                const map = new google.maps.Map(document.getElementById("map"), mapOptions);
+
+                var allMarkers = JSON.parse('{{ markers|tojson }}');
+                for(position of allMarkers) {
+                    let marker = new google.maps.Marker({
+                      map: map,
+                      position: new google.maps.LatLng(position.location[0], position.location[1]),
+                      title: position.name
+                    })
+                }
+            }
+        </script>
+        <script
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC57Zvp4qyrjIyxsOXjzCPV1k3FPUe6oj0&callback=initMap&v=weekly"
+            async
+        ></script>
+    <div {{ register }}>
+        <div class="vertcenter">
+            <form action="/login" method="get" style="text-align: center;">
+                <button class="btn btn-primary" type="submit">Log In</button>
+            </form>
+            <form action="/register" method="get" style="text-align: center;">
+                <button class="btn btn-primary" type="submit">Register</button>
+            </form>
+        </div>
+    </div>
+    <div {{ visibility }}>
+        <div class="horcenter">
+            <form action="/report" method="post" style="text-align: center;">
+                <div class="form-group">
+                    <input autocomplete="off" autofocus class="form-control" name="name" placeholder="Name" type="text">
+                </div>
+                <!--<div class="form-group">-->
+                <!--    <input autocomplete="off" autofocus class="form-control" name="country" placeholder="Country" type="text">-->
+                <!--</div>-->
+                <div class="form-group">
+                    <input autocomplete="off" autofocus class="form-control" name="lat" placeholder="Latitude" type="text">
+                </div>
+                <div class="form-group">
+                    <input autocomplete="off" autofocus class="form-control" name="lng" placeholder="Longitude" type="text">
+                </div>
+                <div class="form-group">
+                    <select class="form-select mx-auto w-auto" name="type" size="5" multiple>
+                        <option disabled selected>type</option>
+                        {% for type in types %}
+                        <option value={{ type[0] }}>{{ type[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <select class="form-select mx-auto w-auto" name="amount">
+                        <option disabled selected>amount</option>
+                        <option value=1>1-5</option>
+                        <option value=5>6-20</option>
+                        <option value=20>21-50</option>
+                        <option value=50>51-100</option>
+                        <option value=100>>100</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <textarea autocomplete="off" autofocus class="form-control" name="comment" placeholder="Comment" cols="40" rows="5" maxlength="1000"></textarea>
+                </div>
+                <button class="btn btn-primary" type="submit">Report</button>
+            </form>
+            <form action="/logout" method="get" style="text-align: center;">
+                <button class="btn btn-primary" type="submit">Log Out</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
