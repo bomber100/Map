@@ -8,7 +8,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 #from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 
 app = Flask(__name__)
-con = sqlite3.connect('map.db')
+con = sqlite3.connect('map.db', check_same_thread=False)
 db = con.cursor()
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
