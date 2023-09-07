@@ -162,9 +162,18 @@ def tracker(lat, lng, amount, unitType):
 
 
 
-# @app.route("/add")
-# def add():
-#     if not request.form.get("add"):
+@app.route("/add", methods = ["POST"])
+def add():
+    if (str(session) == "<FileSystemSession {}>"):
+        return redirect("/")
+    print(request.form.get("added_type"))
+    if not request.form.get("added_type"):
+        return render_template("error.html", error = "Must provide type name")
+    db.execute("INSERT INTO types(type) VALUES (?)", [str(request.form.get("added_type"))])
+    return redirect("/typechange")
+
+
+
 
 @app.route("/typechange")
 def typechange():
