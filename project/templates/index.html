@@ -35,10 +35,10 @@
         ></script>
     <div {{ register }}>
         <div class="vertcenter">
-            <form action="/login" method="get" style="text-align: center;">
+            <form action="/login" method="get" style="text-align: center; padding: 5%;">
                 <button class="btn btn-primary" type="submit">Log In</button>
             </form>
-            <form action="/register" method="get" style="text-align: center;">
+            <form action="/register" method="get" style="text-align: center; padding-top: 20%; padding-left: 0%;">
                 <button class="btn btn-primary" type="submit">Register</button>
             </form>
         </div>
@@ -60,7 +60,7 @@
                 </div>
                 <div class="form-group">
                     <select class="form-select mx-auto w-auto" name="type" size="5" multiple>
-                        <option disabled selected>type</option>
+                        <option disabled selected>Type</option>
                         {% for type in types %}
                         <option value={{ type[0] }}>{{ type[1] }}</option>
                         {% endfor %}
@@ -84,6 +84,11 @@
             <form action="/logout" method="get" style="text-align: center;">
                 <button class="btn btn-primary" type="submit">Log Out</button>
             </form>
+            <div {{ adminVisibility }}>
+                <form action="/typechange" style="text-align: center;">
+                    <button class="btn btn-primary" type="submit">Edit types</button>
+                </form>
+            </div>
         </div>
     </div>
 {% endblock %}

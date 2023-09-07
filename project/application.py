@@ -56,6 +56,7 @@ def index():
     visibility = ""
     register = "class=hidden"
     admin = False
+    adminVisibility = "class=hidden"
     #print(str(session))
     if (str(session) == "<FileSystemSession {}>"):
         visibility = "class=hidden"
@@ -71,12 +72,13 @@ def index():
 
     if admin == True:
         reportedMarkers = db.execute("SELECT name, lat, lng FROM units").fetchall()
+        adminVisibility = ""
         print("admin")
         for marker in reportedMarkers:
             m = {'name': marker[0], 'location': [marker[1], marker[2]]}
             markers.append(m)
 
-    return render_template("index.html", visibility=visibility, register=register, types=types, markers=markers)
+    return render_template("index.html", visibility=visibility, register=register, types=types, markers=markers, adminVisibility=adminVisibility)
 
 @app.route("/logout")
 def logout():
@@ -157,3 +159,16 @@ def report():
 def tracker(lat, lng, amount, unitType):
     # To be continued...
     return -1
+
+
+
+# @app.route("/add")
+# def add():
+#     if not request.form.get("add"):
+
+@app.route("/typechange")
+def typechange():
+    if (str(session) == "<FileSystemSession {}>"):
+        return redirect("/")
+    types = db.execute("SELECT type FROM types ORDER BY id").fetchall()
+    return render_template("typechange.html", types = types)
