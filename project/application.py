@@ -161,23 +161,50 @@ def tracker(lat, lng, amount, unitType):
     return -1
 
 
+############ type routines ####################
+@app.route("/typechange")
+def typechange():
+    if (str(session) == "<FileSystemSession {}>"):
+        return redirect("/")
+    types = db.execute("SELECT id, type FROM types ORDER BY id").fetchall()
+    return render_template("typechange.html", types = types)
 
-@app.route("/add", methods = ["POST"])
+
+@app.route("/addType", methods = ["POST"])
 def add():
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
     print(request.form.get("added_type"))
     if not request.form.get("added_type"):
         return render_template("error.html", error = "Must provide type name")
-    db.execute("INSERT INTO types(type) VALUES (?)", [str(request.form.get("added_type"))])
+    
+    name = str(request.form.get("added_type"))
+    db.execute("INSERT INTO types(type) VALUES (?)", [name])
     return redirect("/typechange")
 
 
-
-
-@app.route("/typechange")
-def typechange():
+@app.route("/updateType", methods = ["POST"])
+def update():
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
-    types = db.execute("SELECT type FROM types ORDER BY id").fetchall()
-    return render_template("typechange.html", types = types)
+    
+    if not request.form.get("updated_type"):
+        return render_template("error.html", error = "Must provide type name")
+    
+    id = str(request.form.get("updated_id"))
+    name = str(request.form.get("updated_type"))
+    db.execute("UPDATE types SET type = ? WHERE id = ?", [name,id])
+    return redirect("/typechange")
+
+
+@app.route("/deleteType", methods = ["POST"])
+def update():
+    if (str(session) == "<FileSystemSession {}>"):
+        return redirect("/")
+    
+    if not request.form.get("deleted_id"):
+        return render_template("error.html", error = "Unkown type ID")
+    
+    id = str(request.form.get("deleted_id"))
+    db.execute("DELETE FROM types WHERE id = ?", [id])
+    return redirect("/typechange")

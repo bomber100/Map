@@ -7,15 +7,25 @@
 {% block body %}
 
 {% for type in types %}
-<div>
-    <form action="/rename" method="post" style="text-align: center; padding: 5%;">
-        <input autocomplete="off" autofocus class="form-control" name="rename" placeholder={{ type[0] }} type="text">
-        <button class="btn btn-primary" type="submit">Rename</button>
-    </form>
-    <form action="/delete" method="post" style="text-align: center; padding: 5%;">
-        <button class="btn btn-primary" type="submit">Delete</button>
-    </form>
-</div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <form action="/rename" method="post" style="text-align: center; padding: 5%;">
+                    <div class="input-group">
+                        <input autocomplete="off" autofocus class="form-control" name="rename" value="{{ type[0] }}" type="text">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit">Rename</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-6">
+                <form action="/delete" method="post" style="text-align: center; padding: 5%;">
+                    <button class="btn btn-danger" type="submit">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>    
 {% endfor %}
 
 <div>
@@ -24,5 +34,59 @@
         <button class="btn btn-primary" type="submit">Add</button>
     </form>
 </div>
- 
+
+<div class="container">
+<table class="GeneratedTable">
+    <thead> <tr> <th>Type</th></tr> </thead>
+    <tbody>
+{% for type in types %}
+<tr>
+    <td><input autocomplete="off" autofocus class="form-control" name="rename{{ type[0] }}" id="{{ type[0] }}" value="{{ type[1] }}" type="text" readonly></td>
+    <td><button class="btn btn-primary" type="button" name="rename_button" id="{{ type[0] }}" onclick='doUpdateType("rename{{ type[0] }}")'>Rename</button></td>
+    <td><button class="btn btn-danger" type="button" name="delete_button" id="{{ type[0] }}" onclick='doDeleteType("rename{{ type[0] }}")'>Delete</button></td>    
+</tr>
+{% endfor %}
+    <tr><td><button class="btn btn-primary" type="button" onclick='doInsertType()'>Add</button></td></tr>
+</tbody></table>
+</div>
+
+<script>
+    function doUpdateType(fieldName) {
+        var inputField = document.querySelector('input[name="' + fieldName + '"]');
+        var button = document.querySelector('button[name="rename_button"][id="' + inputField.id + '"]');
+        
+        if(button.innerHTML == "Rename") {
+            inputField.removeAttribute('readonly');
+            button.innerHTML = "Save";
+        } else if(button.innerHTML == "Save") {
+            //todo: run update action
+            inputField.setAttribute('readonly', '');
+            button.innerHTML = "Rename";
+        }
+        console.log("id = " + inputField.id + ", name = " + inputField.name + ", value = " + inputField.value);
+        console.log("button id = " + button.id + ", text = " + button.innerHTML);
+    }
+
+    function doDeleteType(fieldName) {
+        var inputField = document.querySelector('input[name="' + fieldName + '"]');
+        var delButton = document.querySelector('button[name="delete_button"][id="' + inputField.id + '"]');
+        var updateButton = document.querySelector('button[name="rename_button"][id="' + inputField.id + '"]');
+        var text = "Are you sure to delete type:\n" + inputField.value;
+        if (confirm(text) == true) {
+            //todo: run delete action
+            inputField.setAttribute('readonly', '');
+            delButton.style.display = "none"; 
+            updateButton.style.display = "none"; 
+            inputField.style = "text-decoration: line-through;"
+        }
+    }
+
+    function doInsertType() {
+        let newType = prompt("Enter new Type")
+        if (newType != null){
+            console.log("newType = " + newType);
+            //todo: run insert action
+        }
+    }
+</script>
 {% endblock %}
