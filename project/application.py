@@ -170,41 +170,28 @@ def typechange():
     return render_template("typechange.html", types = types)
 
 
-@app.route("/addType", methods = ["POST"])
-def add():
-    if (str(session) == "<FileSystemSession {}>"):
-        return redirect("/")
-    print(request.form.get("added_type"))
-    if not request.form.get("added_type"):
-        return render_template("error.html", error = "Must provide type name")
-    
-    name = str(request.form.get("added_type"))
-    db.execute("INSERT INTO types(type) VALUES (?)", [name])
-    return redirect("/typechange")
-
-
-@app.route("/updateType", methods = ["POST"])
-def update():
+@app.route("/changeTheType", methods = ["POST"])
+def changeTheType():
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
     
-    if not request.form.get("updated_type"):
-        return render_template("error.html", error = "Must provide type name")
-    
-    id = str(request.form.get("updated_id"))
-    name = str(request.form.get("updated_type"))
-    db.execute("UPDATE types SET type = ? WHERE id = ?", [name,id])
-    return redirect("/typechange")
+    if not request.form.get("type_action"):
+        return render_template("error.html", error = "Action is unknown")
 
+    name = str(request.form.get("type_name"))
+    id = str(request.form.get("type_id"))
+    action = str(request.form.get("type_action"))
 
-@app.route("/deleteType", methods = ["POST"])
-def update():
-    if (str(session) == "<FileSystemSession {}>"):
-        return redirect("/")
-    
-    if not request.form.get("deleted_id"):
-        return render_template("error.html", error = "Unkown type ID")
-    
-    id = str(request.form.get("deleted_id"))
-    db.execute("DELETE FROM types WHERE id = ?", [id])
+    # print("action = " + action + ", name = " + name + ", id = " + id)
+
+    if (action == "insert") :
+        db.execute("INSERT INTO types(type) VALUES (?)", [name])
+
+    elif (action == "update") :
+        db.execute("UPDATE types SET type = ? WHERE id = ?", [name,id])
+
+    elif (action == "delete") :
+        db.execute("DELETE FROM types WHERE id = ?", [id])
+
+    con.commit()
     return redirect("/typechange")
