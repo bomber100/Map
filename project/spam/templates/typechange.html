@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Edit types
+{% endblock %}
+
+{% block body %}
+
+{% for type in types %}
+<div>
+    <form action="/rename" method="post" style="text-align: center; padding: 5%;">
+        <input autocomplete="off" autofocus class="form-control" name="rename" value={{ type[0] }} type="text">
+        <button class="btn btn-primary" type="submit">Rename</button>
+    </form>
+    <form action="/delete" method="post" style="text-align: center; padding: 5%;">
+        <button class="btn btn-primary" type="submit">Delete</button>
+    </form>
+</div>
+{% endfor %}
+
+<div>
+    <form action="/add" method="post" style="text-align: center; padding: 5%;">
+        <input autocomplete="off" autofocus class="form-control" name="added_type" placeholder="Type" type="text">
+        <button class="btn btn-primary" type="submit">Add</button>
+    </form>
+</div>
+ 
+{% endblock %}

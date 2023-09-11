@@ -188,10 +188,10 @@ def changeTheType():
         db.execute("UPDATE types SET type = ? WHERE id = ?", [name,id])
 
     elif (action == "delete") :
-        # unitId = db.execute("SELECT unit_id FROM subunits WHERE type = ?", [name]).fetchall()
-        # for unit in unitId:    
-        #    db.execute("DELETE FROM units WHERE id = ?", [unit])
-        #    db.execute("DELETE FROM subunits WHERE unit_id = ?", [unit])
+        unitId = db.execute("SELECT unit_id FROM subunits WHERE type = ?", [name]).fetchall()
+        for unit in unitId:    
+           db.execute("DELETE FROM units WHERE id = ?", [unit])
+           db.execute("DELETE FROM subunits WHERE unit_id = ?", [unit])
         db.execute("DELETE FROM types WHERE id = ?", [id])
 
     con.commit()
