@@ -68,14 +68,11 @@ def index():
     types = db.execute("SELECT id, type FROM types ORDER BY id").fetchall()
 
     if admin == True:
-        reportedMarkers = db.execute("SELECT name, lat, lng, id, comment FROM units").fetchall()
+        reportedMarkers = db.execute("SELECT name, lat, lng FROM units").fetchall()
         adminVisibility = ""
         print("admin")
         for marker in reportedMarkers:
-            comment = marker[4]
-            if (type(comment) != type(None)): 
-                comment = '<br />'.join(comment.splitlines())
-            m = {'name': marker[0], 'location': [marker[1], marker[2]], 'comment': comment, 'id': marker[3]}
+            m = {'name': marker[0], 'location': [marker[1], marker[2]]}
             markers.append(m)
 
     return render_template("index.html", types=types, markers=markers, adminVisibility=adminVisibility)
@@ -191,10 +188,10 @@ def changeTheType():
         db.execute("UPDATE types SET type = ? WHERE id = ?", [name,id])
 
     elif (action == "delete") :
-        # unitId = db.execute("SELECT unit_id FROM subunits WHERE type = ?", [name]).fetchall()
-        # for unit in unitId:    
-        #    db.execute("DELETE FROM units WHERE id = ?", [unit])
-        #    db.execute("DELETE FROM subunits WHERE unit_id = ?", [unit])
+        unitId = db.execute("SELECT unit_id FROM subunits WHERE type = ?", [name]).fetchall()
+        for unit in unitId:    
+           db.execute("DELETE FROM units WHERE id = ?", [unit])
+           db.execute("DELETE FROM subunits WHERE unit_id = ?", [unit])
         db.execute("DELETE FROM types WHERE id = ?", [id])
 
     con.commit()
