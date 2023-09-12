@@ -12,7 +12,11 @@
             function findComment(id, markers) {
                 for(pos of markers) {
                     if (pos.id == id) {
-                        return pos.comment;
+                        if (pos.comment == null || pos.comment == "" ) {
+                            return pos.name;
+                        } else {
+                            return pos.comment;
+                        }
                     }
                 }
             }
