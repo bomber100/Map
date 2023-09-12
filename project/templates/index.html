@@ -9,6 +9,14 @@
 {% block body %}
         <div id = "map" style = "width:800px; height:600px; margin: auto;" {{ visibility }}></div>
         <script>
+            function findComment(id, markers) {
+                for(pos of markers) {
+                    if (pos.id == id) {
+                        return pos.comment;
+                    }
+                }
+            }
+
             function loadMap() {
               // Initialize Google Maps
                 var initLatLng = {lat: 49.844, lng: 24.01}
@@ -24,13 +32,23 @@
                     let marker = new google.maps.Marker({
                       map: map,
                       position: new google.maps.LatLng(position.location[0], position.location[1]),
-                      title: position.name
+                      title: position.name,
+                      label: position.name.substring(0,1),
+                      zIndex: position.id
                     })
+                    var infowindow = new google.maps.InfoWindow({
+                        
+                    });                    
+                    google.maps.event.addListener(marker, 'click', function() {
+                        let popupComment = findComment(marker.zIndex, allMarkers);
+                        infowindow.setContent(popupComment);
+                        infowindow.open(map, marker);
+                    });
                 }
             }
         </script>
         <script
-            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC57Zvp4qyrjIyxsOXjzCPV1k3FPUe6oj0&callback=initMap&v=weekly"
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC57Zvp4qyrjIyxsOXjzCPV1k3FPUe6oj0&callback=initMap&v=weekly&language=en-US"
             async
         ></script>
     <div {{ register }}>

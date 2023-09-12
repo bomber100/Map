@@ -71,11 +71,13 @@ def index():
     types = db.execute("SELECT id, type FROM types ORDER BY id").fetchall()
 
     if admin == True:
-        reportedMarkers = db.execute("SELECT name, lat, lng FROM units").fetchall()
+        reportedMarkers = db.execute("SELECT name, lat, lng, id, comment FROM units").fetchall()
         adminVisibility = ""
         print("admin")
         for marker in reportedMarkers:
-            m = {'name': marker[0], 'location': [marker[1], marker[2]]}
+            comment = marker[4]
+            comment = '<br />'.join(comment.splitlines())
+            m = {'name': marker[0], 'location': [marker[1], marker[2]], 'comment': comment, 'id': marker[3]}
             markers.append(m)
 
     return render_template("index.html", visibility=visibility, register=register, types=types, markers=markers, adminVisibility=adminVisibility)
