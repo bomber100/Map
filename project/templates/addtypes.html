@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Create new map
+{% endblock %}
+
+{% block body %}
+
+    <div class="vertcenter">
+        <h2 style="text-align: center;">Add Types:</h2>
+        <form action="/addtypes" method="post" style="text-align: center;">
+            <div class="form-group">
+                <input autocomplete="off" autofocus class="form-control" name="name" placeholder="Type" type="text">
+            </div>
+            <button class="btn btn-primary" type="submit">Add</button>
+        </form>
+        <form action="{{ doneAction }}" {{ doneVisibility }} style="text-align: center;">
+            <button class="btn btn-primary" type="submit">Done</button>
+        </form>
+    </div>
+
+{% endblock %}

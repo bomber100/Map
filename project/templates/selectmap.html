@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Select Map
+{% endblock %}
+
+{% block body %}
+
+    <h2 style="text-align: center;">Select A Map:</h2>
+    <form id="SelectMapForm" action="/selectmap" method="post">
+        <input type="hidden" name="map_id" value="">
+        <!-- <input type="hidden" name="map_name" value="" >
+        <input type="hidden" name="type_action" value="nothing" > -->
+    </form>
+
+    {% for map in maps %}
+
+    <button class="btn btn-primary" type="button" name="select_button" id="{{ map[0] }}" onclick='execSQL("{{ map[0] }}")'>{{ map[1] }}</button>
+
+    {% endfor %}
+
+    <div {{ isAdmin }} style="text-align: center; padding: 10%;">
+        <form action="/createmap" method="get" style="text-align: center;">
+            <button class="btn btn-primary" type="submit">Create a new map</button>
+        </form>
+    </div>
+
+    <script>
+        function selectMap(fieldName) {
+        // var inputField = document.querySelector('input[name="' + fieldName + '"]');
+        // var button = document.querySelector('button[name="select_button"][id="' + inputField.id + '"]');
+        
+        execSQL(fieldName);
+    }
+
+    function execSQL(id) {
+        var form = document.getElementById("SelectMapForm");
+            if (form != null) {
+                var idField = document.querySelector('input[name="map_id"][type="hidden"]');
+                
+                idField.setAttribute("value", id);
+            
+                form.submit();
+            }        
+    }
+    </script>
+{% endblock %}

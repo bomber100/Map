@@ -7,54 +7,88 @@
 {% block load%}onload = "loadMap()"{% endblock %}
 
 {% block body %}
-        <div id = "map" style = "width:800px; height:600px; margin: auto;" {{ visibility }}></div>
-        <script>
-            function findComment(id, markers) {
-                for(pos of markers) {
-                    if (pos.id == id) {
-                        if (pos.comment == null || pos.comment == "" ) {
-                            return pos.name;
-                        } else {
-                            return pos.comment;
+<center>
+<table>
+    <tr>
+        <td>
+            <div style="padding: 5%;">
+                <form action="/cabinet" method="get">
+                    <button class="btn btn-primary" type="submit">My account</button>
+                </form>
+            </div>
+        </td>
+        
+        <td>
+            <div id = "map" style = "width:800px; height:600px; margin: auto;" {{ visibility }}></div>
+            <script>
+                function findComment(id, markers) {
+                    for(pos of markers) {
+                        if (pos.id == id) {
+                            if (pos.comment == null || pos.comment == "" ) {
+                                return pos.name;
+                            } else {
+                                return pos.comment;
+                            }
                         }
                     }
                 }
-            }
-
-            function loadMap() {
-              // Initialize Google Maps
-                var initLatLng = {lat: 49.844, lng: 24.01}
-                const mapOptions = {
-                    center: initLatLng,
-                    zoom: 13.5,
-                    mapTypeId: google.maps.MapTypeId.ROADMAP
+    
+                function loadMap() {
+                  // Initialize Google Maps
+                    var initLatLng = {lat: 49.844, lng: 24.01}
+                    const mapOptions = {
+                        center: initLatLng,
+                        zoom: 13.5,
+                        mapTypeId: google.maps.MapTypeId.ROADMAP
+                    }
+                    const map = new google.maps.Map(document.getElementById("map"), mapOptions);
+    
+                    var allMarkers = JSON.parse('{{ markers|tojson }}');
+                    for(position of allMarkers) {
+                        let marker = new google.maps.Marker({
+                          map: map,
+                          position: new google.maps.LatLng(position.location[0], position.location[1]),
+                          title: position.name,
+                          label: position.name.substring(0,1),
+                          zIndex: position.id
+                        })
+                        var infowindow = new google.maps.InfoWindow({
+                            
+                        });                    
+                        google.maps.event.addListener(marker, 'click', function() {
+                            let popupComment = findComment(marker.zIndex, allMarkers);
+                            infowindow.setContent(popupComment);
+                            infowindow.open(map, marker);
+                        });
+                    }
                 }
-                const map = new google.maps.Map(document.getElementById("map"), mapOptions);
-
-                var allMarkers = JSON.parse('{{ markers|tojson }}');
-                for(position of allMarkers) {
-                    let marker = new google.maps.Marker({
-                      map: map,
-                      position: new google.maps.LatLng(position.location[0], position.location[1]),
-                      title: position.name,
-                      label: position.name.substring(0,1),
-                      zIndex: position.id
-                    })
-                    var infowindow = new google.maps.InfoWindow({
-                        
-                    });                    
-                    google.maps.event.addListener(marker, 'click', function() {
-                        let popupComment = findComment(marker.zIndex, allMarkers);
-                        infowindow.setContent(popupComment);
-                        infowindow.open(map, marker);
-                    });
+                
+                function deleteMap() {
+                    var text = "Are you sure to delete this map?"
+                    if(confirm(text) == true) {
+                        var form = document.getElementById("deleteMapForm");
+                        form.submit();
+                    }
                 }
-            }
-        </script>
+            </script>
+        </td>
+
+        <td>
+            <div style="padding: 5%;">
+                <form action="/logout" method="get" style="text-align: right;">
+                    <button class="btn btn-primary" type="submit">Log Out</button>
+                </form>
+            </div>
+        </td>
+    </tr>
+</table>
+
+    </center>
         <script
             src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC57Zvp4qyrjIyxsOXjzCPV1k3FPUe6oj0&callback=initMap&v=weekly&language=en-US"
             async
         ></script>
+        
     <div>
         <div class="horcenter">
             <form action="/report" method="post" style="text-align: center;">
@@ -81,11 +115,9 @@
                 <div class="form-group">
                     <select class="form-select mx-auto w-auto" name="amount">
                         <option disabled selected>amount</option>
-                        <option value=1>1-5</option>
-                        <option value=5>6-20</option>
-                        <option value=20>21-50</option>
-                        <option value=50>51-100</option>
-                        <option value=100>>100</option>
+                        {% for amount in amounts %}
+                        <option value={{ amount[0] }}>{{ amount[1] }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="form-group">
@@ -93,14 +125,22 @@
                 </div>
                 <button class="btn btn-primary" type="submit">Report</button>
             </form>
-            <form action="/logout" method="get" style="text-align: center;">
-                <button class="btn btn-primary" type="submit">Log Out</button>
-            </form>
+            
             <div {{ adminVisibility }}>
                 <form action="/typechange" style="text-align: center;">
                     <button class="btn btn-primary" type="submit">Edit types</button>
                 </form>
             </div>
+            <div {{ adminVisibility }}>
+                <form action="/amountchange" style="text-align: center;">
+                    <button class="btn btn-primary" type="submit">Edit amounts</button>
+                </form>
+            </div>
+            <div {{ adminVisibility }} style="text-align: center;">
+                <form id="deleteMapForm" action="/deletemap" style="text-align: center;"></form>
+                <button class="btn btn-primary" onclick="deleteMap()">Delete map</button>
+            </div>
         </div>
     </div>
+
 {% endblock %}

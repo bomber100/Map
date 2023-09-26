@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Personal cabinet
+{% endblock %}
+
+{% block body %}
+
+    <div class="vertcenter">
+        <h2 style="text-align: center;">My account:</h2>
+        <form action="/passwordchange" method="get" style="text-align: center;">
+            <div class="form-group">
+                <button class="btn btn-primary" type="submit">Change password</button>
+            </div>
+        </form>
+        
+        <form action="/selectmap" method="get" style="text-align: center;">
+            <div class="form-group">
+                <button class="btn btn-primary" type="submit">Maps</button>
+            </div>
+        </form>
+    </div>
+    <div style="padding: 5%;">
+        <form action="/logout" method="get" style="text-align: center;">
+            <button class="btn btn-primary" type="submit">Log Out</button>
+        </form>
+    </div>
+{% endblock %}

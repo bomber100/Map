@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Create new map
+{% endblock %}
+
+{% block body %}
+
+    <div class="vertcenter">
+        <h2 style="text-align: center;">Create New Map:</h2>
+        <form action="/createmap" method="post" style="text-align: center;">
+            <div class="form-group">
+                <input autocomplete="off" autofocus class="form-control" name="map_name" placeholder="Name" type="text">
+            </div>
+            <button class="btn btn-primary" type="submit">Create</button>
+        </form>
+    </div>
+
+{% endblock %}

@@ -1,30 +1,30 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Edit types
+    Edit amounts
 {% endblock %}
 
 {% block body %}
 
 <div class="container">
-<form id="changeTheTypeForm" action="/changeTheType" method="post" >
-    <input type="hidden" name="type_name" value="" >
-    <input type="hidden" name="type_id" value="" >
+<form id="changeTheAmountForm" action="/changeTheAmount" method="post" >
+    <input type="hidden" name="amount_name" value="" >
+    <input type="hidden" name="amount_id" value="" >
     <input type="hidden" name="type_action" value="nothing" >
 </form>
 <center>
 <table class="GeneratedTable" style="margin-top: 10%;">
-    <thead> <tr> <th><center>Types</center></th></tr> </thead>
+    <thead> <tr> <th><center>Amounts: </center></th></tr> </thead>
     <tbody>
         {% for type in types %}
         <tr>
-            <td><input autocomplete="off" autofocus class="form-control" name="rename{{ type[0] }}" id="{{ type[0] }}" value="{{ type[1] }}" type="text" readonly></td>
-            <td><button class="btn btn-primary" type="button" name="rename_button" id="{{ type[0] }}" onclick='doUpdateType("rename{{ type[0] }}")'>Rename</button></td>
-            <td><button class="btn btn-danger" type="button" name="delete_button" id="{{ type[0] }}" onclick='doDeleteType("rename{{ type[0] }}")'>Delete</button></td>    
+            <td><input autocomplete="off" autofocus class="form-control" name="rename{{ amount[0] }}" id="{{ amount[0] }}" value="{{ amount[1] }}" type="text" readonly></td>
+            <td><button class="btn btn-primary" type="button" name="rename_button" id="{{ amount[0] }}" onclick='doUpdateAmount("rename{{ amount[0] }}")'>Rename</button></td>
+            <td><button class="btn btn-danger" type="button" name="delete_button" id="{{ amount[0] }}" onclick='doDeleteAmount("rename{{ amount[0] }}")'>Delete</button></td>    
         </tr>
         {% endfor %}
     <tr>
-        <td><button class="btn btn-primary" type="button" onclick='doInsertType()'>Add</button></td>
+        <td><button class="btn btn-primary" type="button" onclick='doInsertAmount()'>Add</button></td>
         <td><form id="nothing" action="/" method="get">
                 <button class="btn btn-primary" type="submit">Back</button>
             </form>
@@ -36,7 +36,7 @@
 
 <!-- ******************************* -->
 <script>
-    function doUpdateType(fieldName) {
+    function doUpdateAmount(fieldName) {
         var inputField = document.querySelector('input[name="' + fieldName + '"]');
         var button = document.querySelector('button[name="rename_button"][id="' + inputField.id + '"]');
         
@@ -48,27 +48,27 @@
         }
     }
 
-    function doDeleteType(fieldName) {
+    function doDeleteAmount(fieldName) {
         var inputField = document.querySelector('input[name="' + fieldName + '"]');
-        var text = "Are you sure to delete type:\n" + inputField.value;
+        var text = "Are you sure to delete amount:\n" + inputField.value;
         if (confirm(text) == true) {
             inputField.style = "text-decoration: line-through;"
             execSQL("delete", inputField.id, "");
         }
     }
 
-    function doInsertType() {
-        let newType = prompt("Enter new Type")
-        if (newType != null) {
-            execSQL("insert", "", newType);
+    function doInsertAmount() {
+        let newAmount = prompt("Enter new Amount")
+        if (newAmount != null) {
+            execSQL("insert", "", newAmount);
         }
     }
 
     function execSQL(action, id, name) {
-        var form = document.getElementById("changeTheTypeForm");
+        var form = document.getElementById("changeTheAmountForm");
             if (form != null) {
-                var idField = document.querySelector('input[name="type_id"][type="hidden"]');
-                var nameField = document.querySelector('input[name="type_name"][type="hidden"]');
+                var idField = document.querySelector('input[name="amount_id"][type="hidden"]');
+                var nameField = document.querySelector('input[name="amount_name"][type="hidden"]');
                 var actionField = document.querySelector('input[name="type_action"][type="hidden"]');
                 
                 idField.setAttribute("value", id);
