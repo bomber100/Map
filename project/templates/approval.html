@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Approve users
+{% endblock %}
+
+{% block body %}
+
+<h2 style="text-align: center; color: blue;">Check the following users:</h2>
+<center>
+<table>
+    <tr>
+        <th>Username</th>
+        <th>Country</th>
+        <th></th>
+        <th></th>
+    </tr>
+{% for user in users %}
+<tr>
+    <td>{{ user[1] }}</td>
+    <td>{{ user[2] }}</td>
+    <td>
+        <button class="btn btn-primary" type="button" name="approve_btn" id = {{ user[0] }} onclick='check("{{ user[1] }}", "{{ user[0] }}", true)'>Approve</button>
+    </td>
+    <td>
+        <button class="btn btn-danger" type="button" name="block_btn" id = {{ user[0] }} onclick='check("{{ user[1] }}", "{{ user[0] }}", false)'>Block</button>
+    </td>
+</tr>
+{% endfor %}
+</table>   
+</center>
+<form id="approveForm" action="/approve" method="post" >
+    <input name="action" type="hidden" value="">
+    <input name="user_id" type="hidden" value="">
+</form>
+<div>
+    <form action="/cabinet" method="get" style="text-align: center;">
+        <button type="submit" class="btn btn-primary">Back</button>
+    </form>
+</div>
+
+
+
+<script>
+    function check(username, id, approved) {
+        var form = document.getElementById("approveForm");
+            if (form != null) {
+                var idField = document.querySelector('input[name="user_id"][type="hidden"]');
+                var actionField = document.querySelector('input[name="action"][type="hidden"]');
+                var text = "Are you sure to block the user: " + username;
+                var action = "blocked"
+                idField.setAttribute("value", id);
+                if(approved == true) {
+                    action = "activated"
+                    text = "Are you sure to approve the user: " + username;
+                }
+                if (confirm(text) == true) {
+                    actionField.setAttribute("value", action);
+                    form.submit();
+                }            
+            }        
+    }
+</script>
+{% endblock %}

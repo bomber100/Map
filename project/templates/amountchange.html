@@ -16,7 +16,7 @@
 <table class="GeneratedTable" style="margin-top: 10%;">
     <thead> <tr> <th><center>Amounts: </center></th></tr> </thead>
     <tbody>
-        {% for type in types %}
+        {% for amount in amounts %}
         <tr>
             <td><input autocomplete="off" autofocus class="form-control" name="rename{{ amount[0] }}" id="{{ amount[0] }}" value="{{ amount[1] }}" type="text" readonly></td>
             <td><button class="btn btn-primary" type="button" name="rename_button" id="{{ amount[0] }}" onclick='doUpdateAmount("rename{{ amount[0] }}")'>Rename</button></td>

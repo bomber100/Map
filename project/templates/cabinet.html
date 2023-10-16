@@ -19,10 +19,16 @@
                 <button class="btn btn-primary" type="submit">Maps</button>
             </div>
         </form>
+        <div {{ isAdmin }} style="text-align: center;">
+            <form action="/approve" method="get" style="text-align: center;">
+                <button class="btn btn-primary" type="submit">Check new users</button>
+            </form>
+        </div>
+        <div>
+            <form action="/logout" method="get" style="text-align: center;">
+                <button class="btn btn-primary" type="submit">Log Out</button>
+            </form>
+        </div>
     </div>
-    <div style="padding: 5%;">
-        <form action="/logout" method="get" style="text-align: center;">
-            <button class="btn btn-primary" type="submit">Log Out</button>
-        </form>
-    </div>
+    
 {% endblock %}

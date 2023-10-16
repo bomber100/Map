@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "nostyle_layout.html" %}
 
 {% block title %}
     Map
@@ -7,6 +7,7 @@
 {% block load%}onload = "loadMap()"{% endblock %}
 
 {% block body %}
+
 <center>
 <table>
     <tr>
@@ -19,16 +20,37 @@
         </td>
         
         <td>
-            <div id = "map" style = "width:800px; height:600px; margin: auto;" {{ visibility }}></div>
+            <div id = "map" style = "width:800px; height:600px; margin: auto; padding: 0%;" {{ visibility }}></div>
+            <form id="deleteForm" action="/deletemarker" method="post">
+                <input name="marker_id" type="hidden">
+            </form>
             <script>
+
+                var deletion = false;
+                function SwitchDeletion() {
+                    deletion = !deletion;
+                    let deleteBtn = document.getElementById("deleteBtn");
+                    if (deletion) {
+                        deleteBtn.innerHTML = "Stop deleting markers";
+                    }
+                    else {
+                        deleteBtn.innerHTML = "Begin deleting markers";
+                    }
+                }
                 function findComment(id, markers) {
                     for(pos of markers) {
                         if (pos.id == id) {
+                            var text = ""
                             if (pos.comment == null || pos.comment == "" ) {
-                                return pos.name;
+                                text += pos.name;
                             } else {
-                                return pos.comment;
+                                text += pos.comment;
                             }
+                            text += '\n';
+                            text += pos.type;
+                            text += '\n';
+                            text += pos.amount;
+                            return text;
                         }
                     }
                 }
@@ -56,10 +78,42 @@
                             
                         });                    
                         google.maps.event.addListener(marker, 'click', function() {
-                            let popupComment = findComment(marker.zIndex, allMarkers);
-                            infowindow.setContent(popupComment);
-                            infowindow.open(map, marker);
+                            if (deletion == true) {
+                                let form = document.getElementById("deleteForm");
+                                
+                                if (form != null) {
+                                    
+                                    var idField = document.querySelector('input[name="marker_id"][type="hidden"]');
+                                    
+                                    var text = "Are you sure to delete this marker?";
+                                    idField.setAttribute("value", marker.zIndex);
+                                    console.log(marker);
+                                    
+                                    if (confirm(text) == true) {
+                                        form.submit();
+                                    }            
+                                }        
+                            }
+
+                            else {
+                                let popupComment = findComment(marker.zIndex, allMarkers);
+                                infowindow.setContent(popupComment);
+                                infowindow.open(map, marker);
+                            }
                         });
+                        // google.maps.event.addListener(marker, 'rightclick', function() {
+                            
+                        //     let form = document.getElementById("deleteForm");
+                        //     if (form != null) {
+                        //         var idField = document.querySelector('input[name="marker_id"][type="hidden"]');
+                        //         var text = "Are you sure to delete this marker?";
+                        //         idField.setAttribute("value", id);
+                        //         print("dddddddd")
+                        //         if (confirm(text) == true) {
+                        //             form.submit();
+                        //         }            
+                        //     }        
+                        // });
                     }
                     google.maps.event.addListener(map, "rightclick", function(event) {
                         var lat = event.latLng.lat();
@@ -100,6 +154,7 @@
         
     <div>
         <div class="horcenter">
+            <table>
             <form action="/report" method="post" style="text-align: center;">
                 <div class="form-group">
                     <input autocomplete="off" autofocus class="form-control" name="name" placeholder="Name" type="text">
@@ -108,48 +163,79 @@
                 <!--    <input autocomplete="off" autofocus class="form-control" name="country" placeholder="Country" type="text">-->
                 <!--</div>-->
                 <div class="form-group">
+                    <h4>Right-click the map to get coordinates</h4>
+                </div>
+                <div class="form-group">
                     <input autocomplete="off" autofocus class="form-control" name="lat" placeholder="Latitude" type="text">
                 </div>
                 <div class="form-group">
                     <input autocomplete="off" autofocus class="form-control" name="lng" placeholder="Longitude" type="text">
                 </div>
-                <div class="form-group">
-                    <select class="form-select mx-auto w-auto" name="type" size="5" multiple>
-                        <option disabled selected>Type</option>
+                
+                <center>
+                    <div class="form-group">
+                        <legend>Type: </legend>
                         {% for type in types %}
-                        <option value={{ type[0] }}>{{ type[1] }}</option>
+                        <div class="form-group">
+                            <input type="checkbox" name="type" id="{{ type[0] }}" value="{{ type[0] }}"/>
+                            <label for="{{ type[0] }}" >{{ type[1] }}</label>
+                        </div>
                         {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <select class="form-select mx-auto w-auto" name="amount">
-                        <option disabled selected>amount</option>
+                    
+                        <!-- <select class="form-select mx-auto w-auto" name="type" size="5" multiple>
+                            <option disabled selected>Type</option>
+                            {% for type in types %}
+                            <option value={{ type[0] }}>{{ type[1] }}</option>
+                            {% endfor %}
+                        </select> -->
+                    
+                    
+                        <legend>Amount:</legend>
+                        <div class="form-group">
+                        <select name="amount" id="amount">
+                        <option disabled selected>Amount</option>
                         {% for amount in amounts %}
-                        <option value={{ amount[0] }}>{{ amount[1] }}</option>
+                        
+                        <option value="{{ amount[0] }}">{{ amount[1] }}</option>
+                        
                         {% endfor %}
-                    </select>
-                </div>
+                        </select>
+                        </div>
+                    </div>
+                
+                    <!-- <select class="form-select mx-auto w-auto" name="amount" size="5" multiple>
+                        <option disabled selected>Amount</option>
+                        {% for amount in amounts %}
+                            <option value={{ amount[0] }}>{{ amount[1] }}</option>
+                        {% endfor %}
+                    </select> -->
+                
                 <div class="form-group">
                     <textarea autocomplete="off" autofocus class="form-control" name="comment" placeholder="Comment" cols="40" rows="5" maxlength="1000"></textarea>
                 </div>
                 <button class="btn btn-primary" type="submit">Report</button>
             </form>
             
-            <div {{ adminVisibility }}>
+            <div {{ adminVisibility }} class="form-group">
                 <form action="/typechange" style="text-align: center;">
                     <button class="btn btn-primary" type="submit">Edit types</button>
                 </form>
             </div>
-            <div {{ adminVisibility }}>
+            <div {{ adminVisibility }} class="form-group">
                 <form action="/amountchange" style="text-align: center;">
                     <button class="btn btn-primary" type="submit">Edit amounts</button>
                 </form>
             </div>
-            <div {{ adminVisibility }} style="text-align: center;">
+        </center>
+            <div {{ adminVisibility }} class="form-group" style="text-align: center;">
+                <button style="text-align: center;" class="btn btn-danger" id="deleteBtn" type="button" onclick="SwitchDeletion()">Begin deleting markers</button>
+            </div>
+            <div {{ adminVisibility }} style="text-align: center;" class="form-group">
                 <form id="deleteMapForm" action="/deletemap" style="text-align: center;"></form>
-                <button class="btn btn-primary" onclick="deleteMap()">Delete map</button>
+                <button class="btn btn-danger" onclick="deleteMap()">Delete map</button>
             </div>
         </div>
+    </table>
     </div>
 
 {% endblock %}

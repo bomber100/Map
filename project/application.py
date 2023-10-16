@@ -47,14 +47,18 @@ def login():
             return render_template("error.html", error = "Invalid username and/or password")
 
         # Remember which user has logged in
-        session["user_id"] = rows[0]
 
+        user_id = rows[0]
+        role = db.execute("SELECT role FROM users WHERE id = ?", ([user_id])).fetchone()
+        if role[0] == "blocked":
+            return render_template("error.html", error = "Your account has been blocked")
+        
+        session["user_id"] = rows[0]
         # Redirect user to home page
         return redirect("/cabinet")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
-        print("get")
         return render_template("login.html")
 
 @app.route("/")
@@ -62,7 +66,7 @@ def index():
     admin = False
     adminVisibility = "class=hidden"
     print(map_id)
-    #print(str(session))
+    
     if (str(session) == "<FileSystemSession {}>"):
         print("something")
         return render_template("loginstart.html")
@@ -74,19 +78,45 @@ def index():
     markers = []
     types = db.execute("SELECT id, type FROM types WHERE map_id = ? ORDER BY id", [map_id]).fetchall()
     amounts = db.execute("SELECT id, value FROM amounts WHERE map_id = ? ORDER BY id", [map_id]).fetchall()
+    
 
     if admin == True:
         reportedMarkers = db.execute("SELECT name, lat, lng, id, comment FROM units WHERE map_id = ?", [map_id]).fetchall()
+        
         adminVisibility = ""
-        print("admin")
+        
         for marker in reportedMarkers:
+            #print("id: " + str(marker[3]))
+            marker_type = ""
+            marker_amount = ""
+            
+            theTypes = db.execute("SELECT t.type FROM unit_relations ur JOIN types t ON ur.unit_id = ? AND t.type != -1 AND t.id = ur.type_id", [int(marker[3])]).fetchall()
+            #print(theTypes)
+            unitAmount = db.execute("SELECT a.id, a.value FROM unit_relations u JOIN amounts a ON u.amount_id = a.id AND u.unit_id = ? AND u.Amount_id != -1 LIMIT 1", [int(marker[3])]).fetchone()
+            
+            for theType in theTypes:
+                marker_type += theType[0]
+                marker_type += ", "
+
+            if type(unitAmount) != type(None):
+                marker_amount = str(unitAmount[1])
+                
+
+            if(len(marker_type) > 1):
+                marker_type = marker_type[:-1]
+                marker_type = marker_type[:-1]
+
+            # Remove the last ", " elements
+
+            
+
             comment = marker[4]
             if (type(comment) != type(None)): 
                 comment = '<br />'.join(comment.splitlines())
-            m = {'name': marker[0], 'location': [marker[1], marker[2]], 'comment': comment, 'id': marker[3]}
+            m = {'name': marker[0], 'location': [marker[1], marker[2]], 'comment': comment, 'id': marker[3], 'type': marker_type, 'amount': marker_amount}
             markers.append(m)
 
-    return render_template("index.html", types=types, markers=markers, adminVisibility=adminVisibility, amounts = amounts)
+    return render_template("index.html", types=types, markers=markers, adminVisibility=adminVisibility, amounts = amounts, unitAmount = unitAmount)
 
 @app.route("/logout")
 def logout():
@@ -119,8 +149,8 @@ def register():
             return render_template("error.html", error = "This username is already taken")
         print(str(request.form.get("username")))
 
-        db.execute("INSERT INTO users(username, hash, country) values(?, ?, ?)", [(str(request.form.get("username"))),
-        (str(generate_password_hash(request.form.get("password")))), str(request.form.get("country"))])
+        db.execute("INSERT INTO users(username, hash, country, role) values(?, ?, ?, ?)", [(str(request.form.get("username"))),
+        (str(generate_password_hash(request.form.get("password")))), str(request.form.get("country")), ("not_activated")])
         con.commit()
 
         return redirect("/")
@@ -133,6 +163,11 @@ def report():
 
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
+    
+    user_id = session["user_id"]
+    role = db.execute("SELECT role FROM users WHERE id = ?", ([user_id])).fetchone()
+    if role[0] == "not_activated":
+        return render_template("error.html", error = "Only activated users can make reports. Please contact the admins to be activated.")
     
     if not request.form.get("lat"):
         return render_template("error.html", error = "Must provide latitude")
@@ -155,12 +190,25 @@ def report():
 
 
     reportedType = request.form.getlist("type")
+    print(reportedType)
     lat = str(request.form.get("lat"))
     lng = str(request.form.get("lng"))
+    
+    try:
+        lat = float(lat)
+        lng = float(lng)
+    except:
+        return render_template("error.html", error = "Invalid coordinates")
+    
     amount = int(request.form.get("amount"))
+    neededId = db.execute("SELECT max(id) FROM units").fetchone()[0] + 1
+    print("Needed id is: " + str(neededId))
+    db.execute("INSERT INTO units(id, user_id, name, lat, lng, country, comment, map_id) values(?, ?, ?, ?, ?, ?, ?, ?)", [neededId, user_id, (str(request.form.get("name"))),
+        lat, lng, str(request.form.get("country")), str(request.form.get("comment")), (map_id)])
+    
     for i in reportedType:
-        db.execute("INSERT INTO units(name, lat, lng, amount, type, country, comment, map_id) values(?, ?, ?, ?, ?, ?, ?, ?)", [(str(request.form.get("name"))),
-            lat, lng, amount, int(i), str(request.form.get("country")), str(request.form.get("comment")), (map_id)])
+        db.execute("INSERT INTO unit_relations(unit_id, type_id, amount_id) values(?, ?, ?)", [neededId, int(i), amount])
+    
     con.commit()
 
     return redirect("/")
@@ -197,8 +245,6 @@ def changeTheType():
     id = str(request.form.get("type_id"))
     action = str(request.form.get("type_action"))
 
-    # print("action = " + action + ", name = " + name + ", id = " + id)
-
     if (action == "insert") :
         db.execute("INSERT INTO types(type, map_id) VALUES (?, ?)", [(name), (map_id)])
 
@@ -221,7 +267,13 @@ def cabinet():
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
     
-    return render_template("cabinet.html")
+    isAdmin = "class=hidden"
+    user_id = session["user_id"]
+    role = db.execute("SELECT role FROM users WHERE id = ?", ([user_id])).fetchone()
+    if role[0] == "admin":
+        isAdmin = ""
+
+    return render_template("cabinet.html", isAdmin = isAdmin)
     
 
 @app.route("/passwordchange", methods = ["GET", "POST"])
@@ -391,3 +443,54 @@ def changeTheAmount():
     
     con.commit()
     return redirect("/amountchange")
+
+
+@app.route("/approve", methods=["GET", "POST"])
+def approve():
+
+    if (str(session) == "<FileSystemSession {}>"):
+        return redirect("/")
+    
+    user_id = session["user_id"]
+    role = db.execute("SELECT role FROM users WHERE id = ?", ([user_id])).fetchone()
+    if role[0] != "admin":
+        return render_template("error.html", error="Users can only be approved by admins")
+    
+    if request.method == "GET":
+
+        users = db.execute("SELECT id, username, country FROM users WHERE role = ?", ["not_activated"]).fetchall()
+        return render_template("approval.html", users = users)
+    
+    else:
+        actions = ["activated", "blocked"]
+        if not request.form.get("action") or request.form.get("action") not in actions:
+            return render_template("error.html", error = "Invalid action")
+        
+        try:
+            user_id = int(request.form.get("user_id"))
+            db.execute("UPDATE users SET role = ? WHERE id = ?", [str(request.form.get("action")), user_id])
+            con.commit()
+        except:
+            return render_template("error.html", error = "Failed to process the user")
+        return redirect("/approve")
+    
+
+@app.route("/deletemarker", methods = ["POST"])
+def deletemarker():
+
+    if (str(session) == "<FileSystemSession {}>"):
+        return redirect("/")
+
+    user_id = session["user_id"]
+    role = db.execute("SELECT role FROM users WHERE id = ?", ([user_id])).fetchone()
+    if role[0] != "admin":
+        return render_template("error.html", error="Markers can only be deleted by admins")
+    
+    try:
+        marker_id = request.form.get("marker_id")
+        db.execute("DELETE FROM units WHERE id = ?", [marker_id])
+        db.execute("DELETE FROM unit_relations WHERE unit_id = ?", [marker_id])
+        con.commit()
+        return redirect("/")
+    except:
+        return render_template("error.html", error = "Failed to process the marker")

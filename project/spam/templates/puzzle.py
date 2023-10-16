@@ -60,6 +60,7 @@ class Puzzle():
             VPattern = Pattern("V", "V*VV*V*V*")
             self.__AllowedPatterns.append(VPattern)
             self.__AllowedSymbols.append("V")
+            self.__AllowedSymbols.append("#")
 
     def __LoadPuzzle(self, Filename):
         try:
@@ -90,6 +91,49 @@ class Puzzle():
             print("Puzzle not loaded")
             exit(1)
 
+    def __SavePuzzle(self, Filename):
+        try:
+            with open(Filename, "w") as f:
+
+                NoOfSymbols = len(self.__AllowedSymbols)
+                f.write(str(NoOfSymbols)+'\n')
+
+                for symbol in self.__AllowedSymbols:
+                    f.write(symbol + '\n')
+
+                for pattern in self.__AllowedPatterns:
+                    patternString = pattern.GetSymbol() + ','+ pattern.GetPatternSequence() + '\n'
+                    f.write(patternString)
+                
+                gridsize = self.__GridSize
+                f.write(str(gridsize) + '\n')
+                grid = self.__Grid
+                for i in range(gridsize*gridsize):
+                    c = grid[i]
+                    symbol = c.GetSymbol()
+                    if (symbol == "-"):
+                        symbol = ""
+                    f.write(symbol+',')
+
+                    NotAllowedSymbols = c.GetNotAllowedSymbols()
+                    NotAllowedString = ""
+                    for s in NotAllowedSymbols:
+                        NotAllowedString += s
+                        NotAllowedString += ","
+                    NotAllowedString = NotAllowedString[:-1]
+                    NotAllowedString += '\n'
+                    f.write(NotAllowedString)
+                
+                score = self.__Score
+                f.write(str(score) + '\n')
+                symbolsLeft = self.__SymbolsLeft
+                f.write(str(symbolsLeft) + '\n')
+            return True
+
+        except:
+            print("Failed to save the puzzle")
+            return False
+
     def AttemptPuzzle(self):
         Finished = False
         while not Finished:
@@ -115,12 +159,19 @@ class Puzzle():
                     pass
             Symbol = self.__GetSymbolFromUser()
             self.__SymbolsLeft -= 1
-            CurrentCell = self.__GetCell(Row, Column)
-            if CurrentCell.CheckSymbolAllowed(Symbol):
-                CurrentCell.ChangeSymbolInCell(Symbol)
-                AmountToAddToScore = self.CheckforMatchWithPattern(Row, Column)
-                if AmountToAddToScore > 0:
-                    self.__Score += AmountToAddToScore
+            
+            if (Symbol == "#"):
+                score = self.__RemoveSymbol(Row, Column)
+                self.__Score += score
+
+            else:
+
+                CurrentCell = self.__GetCell(Row, Column)
+                if CurrentCell.CheckSymbolAllowed(Symbol):
+                    CurrentCell.ChangeSymbolInCell(Symbol)
+                    AmountToAddToScore = self.CheckforMatchWithPattern(Row, Column)
+                    if AmountToAddToScore > 0:
+                        self.__Score += AmountToAddToScore
             if self.__SymbolsLeft == 0:
                 Finished = True
         print()
@@ -170,6 +221,11 @@ class Puzzle():
         Symbol = ""
         while not Symbol in self.__AllowedSymbols:
             Symbol = input("Enter symbol: ").upper()
+            if (Symbol == "SAVE"):
+                name = input("Name the file in which your puzzle will be saved: ")
+                saved = self.__SavePuzzle(name)
+                if saved == True:
+                    exit(1)
         return Symbol
 
     def __CreateHorizontalLine(self):
@@ -194,6 +250,42 @@ class Puzzle():
                 print("|")
                 print(self.__CreateHorizontalLine())
 
+    def __RemoveSymbol(self, row, column):
+
+        if (row < 2 or column > self.__GridSize - 2):
+            print("No symbol found!") 
+            return 0
+        
+        SymbolGrid = []
+        SymbolGrid.append(self.__GetCell(row, column))
+        SymbolGrid.append(self.__GetCell(row, column + 1))
+        SymbolGrid.append(self.__GetCell(row, column + 2))
+        SymbolGrid.append(self.__GetCell(row - 1, column + 2))
+        SymbolGrid.append(self.__GetCell(row - 2, column + 2))
+        SymbolGrid.append(self.__GetCell(row - 2, column + 1))
+        SymbolGrid.append(self.__GetCell(row - 2, column))
+        SymbolGrid.append(self.__GetCell(row - 1, column))
+        SymbolGrid.append(self.__GetCell(row - 1, column + 1))
+        PatternString = ""
+
+        minusScore = 0
+        for i in range(9):
+            PatternString += SymbolGrid[i].GetSymbol()
+            
+        for P in self.__AllowedPatterns:
+                        CurrentSymbol = SymbolGrid[0].GetSymbol()
+                        if P.MatchesPattern(PatternString, CurrentSymbol):
+                            for i in range(9):
+                                if(SymbolGrid[i].GetSymbol() != '@'):
+                                    SymbolGrid[i].RemoveFromNotAllowedSymbols(CurrentSymbol)
+                                    SymbolGrid[i].ChangeSymbolInCell("")
+                            print("Symbol removed")
+                            minusScore -= 10
+        if(minusScore == 0):
+            print("No symbol found!")  
+        return minusScore
+
+
 class Pattern():
     def __init__(self, SymbolToUse, PatternString):
         self.__Symbol = SymbolToUse
@@ -209,6 +301,9 @@ class Pattern():
             except Exception as ex:
                 print(f"EXCEPTION in MatchesPattern: {ex}")
         return True
+
+    def GetSymbol(self):
+        return self.__Symbol
 
     def GetPatternSequence(self):
       return self.__PatternSequence
@@ -242,8 +337,14 @@ class Cell():
     def AddToNotAllowedSymbols(self, SymbolToAdd):
         self.__SymbolsNotAllowed.append(SymbolToAdd)
 
+    def RemoveFromNotAllowedSymbols(self, SymbolToRemove):
+        self.__SymbolsNotAllowed.remove(SymbolToRemove)
+
     def UpdateCell(self):
         pass
+
+    def GetNotAllowedSymbols(self):
+        return self.__SymbolsNotAllowed
 
 class BlockedCell(Cell):
     def __init__(self):
