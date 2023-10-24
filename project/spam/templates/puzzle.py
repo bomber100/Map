@@ -61,6 +61,7 @@ class Puzzle():
             self.__AllowedPatterns.append(VPattern)
             self.__AllowedSymbols.append("V")
             self.__AllowedSymbols.append("#")
+            self.__AllowedSymbols.append("SAVE")
 
     def __LoadPuzzle(self, Filename):
         try:
@@ -160,9 +161,10 @@ class Puzzle():
             Symbol = self.__GetSymbolFromUser()
             self.__SymbolsLeft -= 1
             
-            if (Symbol == "#"):
+            if (Symbol == "*"):
                 score = self.__RemoveSymbol(Row, Column)
                 self.__Score += score
+
 
             else:
 
@@ -219,13 +221,13 @@ class Puzzle():
 
     def __GetSymbolFromUser(self):
         Symbol = ""
-        while not Symbol in self.__AllowedSymbols:
+        while (not Symbol in self.__AllowedSymbols) and Symbol != "*":
             Symbol = input("Enter symbol: ").upper()
             if (Symbol == "SAVE"):
                 name = input("Name the file in which your puzzle will be saved: ")
                 saved = self.__SavePuzzle(name)
                 if saved == True:
-                    exit(1)
+                    exit(0)
         return Symbol
 
     def __CreateHorizontalLine(self):
@@ -236,14 +238,14 @@ class Puzzle():
 
     def DisplayPuzzle(self):
         print()
-        if self.__GridSize < 10:
-            print("  ", end='')
-            for Count in range(1, self.__GridSize + 1):
-                print(" " + str(Count), end='')
+        #if self.__GridSize < 10:
+        print("  ", end='')
+        for Count in range(1, self.__GridSize + 1):
+            print(" " + str(Count), end='')
         print()
         print(self.__CreateHorizontalLine())
         for Count in range(0, len(self.__Grid)):
-            if Count % self.__GridSize == 0 and self.__GridSize < 10:
+            if Count % self.__GridSize == 0:# and self.__GridSize < 10:
                 print(str(self.__GridSize - ((Count + 1) // self.__GridSize)) + " ", end='')
             print("|" + self.__Grid[Count].GetSymbol(), end='')
             if (Count + 1) % self.__GridSize == 0:

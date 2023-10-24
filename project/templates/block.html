@@ -1,19 +1,19 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Approve users
+    Block/unblock users
 {% endblock %}
 
 {% block body %}
 
-<h2 style="text-align: center; color: blue;">Check the following users:</h2>
+<h2 style="text-align: center; color: blue;">List of active users:</h2>
 <center>
 <table>
     <tr>
         <th>Username</th>
         <th>Country</th>
+        <th>Status</th>
         <th>Registration Date</th>
-        <th></th>
         <th></th>
     </tr>
 {% for user in users %}
@@ -21,18 +21,23 @@
     <td>{{ user[1] }}</td>
     <td>{{ user[2] }}</td>
     <td>{{ user[3] }}</td>
+    <td>{{ user[4] }}</td>
+    {% if user[3] == "blocked" %}
     <td>
-        <button class="btn btn-primary" type="button" name="approve_btn" id = {{ user[0] }} onclick='check("{{ user[1] }}", "{{ user[0] }}", true)'>Approve</button>
+        <button class="btn btn-primary" type="button" name="approve_btn" id = {{ user[0] }} onclick='check("{{ user[1] }}", "{{ user[0] }}", true)'>Unblock</button>
     </td>
+    {% else %}
     <td>
         <button class="btn btn-danger" type="button" name="block_btn" id = {{ user[0] }} onclick='check("{{ user[1] }}", "{{ user[0] }}", false)'>Block</button>
     </td>
+    {% endif %}
 </tr>
 {% endfor %}
 </table>   
 </center>
-<form id="approveForm" action="/approve" method="post" >
+<form id="blockForm" action="/block" method="post" >
     <input name="action" type="hidden" value="">
+    <input name="reason" type="hidden" value="">
     <input name="user_id" type="hidden" value="">
 </form>
 <div>
@@ -45,21 +50,31 @@
 
 <script>
     function check(username, id, approved) {
-        var form = document.getElementById("approveForm");
+        var form = document.getElementById("blockForm");
             if (form != null) {
                 var idField = document.querySelector('input[name="user_id"][type="hidden"]');
                 var actionField = document.querySelector('input[name="action"][type="hidden"]');
+                var reasonField = document.querySelector('input[name="reason"][type="hidden"]')
                 var text = "Are you sure to block the user: " + username;
                 var action = "blocked"
                 idField.setAttribute("value", id);
                 if(approved == true) {
                     action = "activated"
-                    text = "Are you sure to approve the user: " + username;
+                    text = "Are you sure to unblock the user: " + username;
+                    if (confirm(text) == true) {
+                        actionField.setAttribute("value", action);
+                        form.submit();
+                    }            
                 }
-                if (confirm(text) == true) {
-                    actionField.setAttribute("value", action);
-                    form.submit();
-                }            
+                else {
+                    if (confirm(text) == true) {
+                        actionField.setAttribute("value", action);
+                        let reason = prompt("Please enter a reason for blocking the user");
+                        reasonField.setAttribute("value", reason)
+                        form.submit();
+                    }    
+                    
+                }
             }        
     }
 </script>

@@ -17,8 +17,7 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-global map_id
-map_id = 1
+
 
 # mapcon = con = sqlite3.connect('map.db', check_same_thread=False)
 # mapdb = mapcon.connect()
@@ -49,13 +48,13 @@ def login():
         # Remember which user has logged in
 
         user_id = rows[0]
-        role = db.execute("SELECT role FROM users WHERE id = ?", ([user_id])).fetchone()
-        if role[0] == "blocked":
-            return render_template("error.html", error = "Your account has been blocked")
+        # role = db.execute("SELECT role FROM users WHERE id = ?", ([user_id])).fetchone()
+        # if role[0] == "blocked":
+        #     return render_template("error.html", error = "Your account has been blocked")
         
         session["user_id"] = rows[0]
         # Redirect user to home page
-        return redirect("/cabinet")
+        return redirect("/selectmap")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
@@ -65,20 +64,32 @@ def login():
 def index():
     admin = False
     adminVisibility = "class=hidden"
-    print(map_id)
+    # print(map_id)
     
     if (str(session) == "<FileSystemSession {}>"):
         print("something")
         return render_template("loginstart.html")
     else:
         user_id = session["user_id"]
-        role = db.execute("SELECT role FROM users WHERE id = ?", ([user_id])).fetchone()
+        map_id = session['map_id']
+        role = db.execute("SELECT role FROM user_roles WHERE user_id = ? AND map_id = ?", ([user_id, map_id])).fetchone()
+
+        if type(role) == type(None):
+            db.execute("INSERT INTO user_roles(user_id, role, map_id) VALUES (?, ?, ?)", [user_id, "not_activated", map_id])
+            con.commit()
+            return render_template("error.html", error = "Your account is not activated. Please contact the admins to be activated")
+
+        if role[0] == "not_activated":
+            return render_template("error.html", error = "Your account is not activated. Please contact the admins to be activated")
+        
         if role[0] == "admin":
             admin = True
+
+
     markers = []
     types = db.execute("SELECT id, type FROM types WHERE map_id = ? ORDER BY id", [map_id]).fetchall()
     amounts = db.execute("SELECT id, value FROM amounts WHERE map_id = ? ORDER BY id", [map_id]).fetchall()
-    
+    unitAmount = []
 
     if admin == True:
         reportedMarkers = db.execute("SELECT name, lat, lng, id, comment FROM units WHERE map_id = ?", [map_id]).fetchall()
@@ -153,7 +164,7 @@ def register():
         (str(generate_password_hash(request.form.get("password")))), str(request.form.get("country")), ("not_activated")])
         con.commit()
 
-        return redirect("/")
+        return redirect("/selectmap")
 
     else:
         return render_template("register.html")
@@ -164,8 +175,13 @@ def report():
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
     
+    map_id = session['map_id']
+    
+    if (type(map_id) == type(None)):
+        return redirect("/selectmap")
+
     user_id = session["user_id"]
-    role = db.execute("SELECT role FROM users WHERE id = ?", ([user_id])).fetchone()
+    role = db.execute("SELECT role FROM user_roles WHERE user_id = ? AND map_id = ?", ([user_id, map_id])).fetchone()
     if role[0] == "not_activated":
         return render_template("error.html", error = "Only activated users can make reports. Please contact the admins to be activated.")
     
@@ -218,24 +234,47 @@ def report():
 ############ type routines ####################
 @app.route("/typechange")
 def typechange():
+
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
+    
+    map_id = session['map_id']
+    
+    if (type(map_id) == type(None)):
+        return redirect("/selectmap")
+    
+
     types = db.execute("SELECT id, type FROM types WHERE map_id = ? ORDER BY id", [map_id]).fetchall()
     return render_template("typechange.html", types = types)
 
 
 @app.route("/amountchange")
 def amountchange():
+
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
+    
+    map_id = session['map_id']
+    
+    if (type(map_id) == type(None)):
+        return redirect("/selectmap")
+    
+
     amounts = db.execute("SELECT id, value FROM amounts WHERE map_id = ? ORDER BY id", [map_id]).fetchall()
     return render_template("amountchange.html", amounts = amounts)
 
 
 @app.route("/changeTheType", methods = ["POST"])
 def changeTheType():
+
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
+    
+    map_id = session['map_id']
+    
+    if (type(map_id) == type(None)):
+        return redirect("/selectmap")
+    
     
     if not request.form.get("type_action"):
         return render_template("error.html", error = "Action is unknown")
@@ -267,10 +306,22 @@ def cabinet():
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
     
+    map_id = session['map_id']
+    
+    if (type(map_id) == type(None)):
+        return redirect("/selectmap")
+    
+    
     isAdmin = "class=hidden"
     user_id = session["user_id"]
-    role = db.execute("SELECT role FROM users WHERE id = ?", ([user_id])).fetchone()
-    if role[0] == "admin":
+    role = db.execute("SELECT role FROM user_roles WHERE user_id = ? AND map_id = ?", ([user_id, map_id])).fetchone()
+
+    if type(role) == type(None):
+            db.execute("INSERT INTO user_roles(user_id, role, map_id) VALUES (?, ?, ?)", [user_id, "not_activated", map_id])
+            role = ("not_activated")
+            con.commit()
+
+    elif role[0] == "admin":
         isAdmin = ""
 
     return render_template("cabinet.html", isAdmin = isAdmin)
@@ -325,10 +376,8 @@ def createmap():
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
     
+    map_id = session['map_id']
     user_id = session["user_id"]
-    role = db.execute("SELECT role FROM users WHERE id = ?", ([user_id])).fetchone()
-    if role[0] != "admin":
-        return render_template("error.html", error="New maps can only be created by admins")
 
     if request.method == "GET":
         return render_template("createmap.html")
@@ -337,10 +386,12 @@ def createmap():
         map_name = request.form.get("map_name")
         if (db.execute("SELECT name FROM maps WHERE name = ?", [str(map_name)]).fetchone() != None):
             return render_template("error.html", error = "Map with this name already exists")
+        
         db.execute("INSERT INTO maps(name) VALUES(?)", [str(map_name)])
-        global map_id
-        map_id = int(db.execute("SELECT id FROM maps WHERE name = ?", [str(map_name)]).fetchone()[0])
-        print(map_id)
+        new_id = int(db.execute("SELECT id FROM maps WHERE name = ?", [str(map_name)]).fetchone()[0]) 
+        session["map_id"] = new_id
+        db.execute("INSERT INTO user_roles(user_id, role, map_id) VALUES (?, ?, ?)", [user_id, "admin", map_id])
+
         con.commit()
         return redirect("/addtypes")
 
@@ -351,20 +402,19 @@ def selectmap():
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
     
-    isAdmin = 'style="display:none;"'
-    user_id = session["user_id"]
-    role = db.execute("SELECT role FROM users WHERE id = ?", ([user_id])).fetchone()
-    if role[0] == "admin":
-        isAdmin = ""
+
+    # user_id = session["user_id"]
+    # role = db.execute("SELECT role FROM user_roles WHERE map_id = ? ANd user_id = ?", ([map_id, user_id])).fetchone()
+    
     
     if request.method == "GET":
         maps = db.execute("SELECT id, name FROM maps").fetchall()
-        return render_template("selectmap.html", maps = maps, isAdmin=isAdmin)
+        return render_template("selectmap.html", maps = maps)
     
-    else:
-        global map_id 
+    else: 
         map_id = int(request.form.get("map_id"))
-        return redirect("/")
+        session["map_id"] = map_id
+        return redirect("/cabinet")
 
 
 @app.route("/addtypes", methods=["GET", "POST"])
@@ -372,6 +422,12 @@ def addtypes():
     
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
+    
+    map_id = session['map_id']
+    
+    if (type(map_id) == type(None)):
+        return redirect("/selectmap")
+    
     
     doneAction = "/addtypes"
     doneVisibility = "class=hidden"
@@ -397,24 +453,39 @@ def deletemap():
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
     
+    map_id = session['map_id']
+    
+    if (type(map_id) == type(None)):
+        return redirect("/selectmap")
+    
+    
     user_id = session["user_id"]
-    role = db.execute("SELECT role FROM users WHERE id = ?", ([user_id])).fetchone()
+    role = db.execute("SELECT role FROM user_roles WHERE user_id = ? AND map_id = ?", ([user_id, map_id])).fetchone()
     if role[0] != "admin":
         return render_template("error.html", error="Maps can only be deleted by admins")
     
     else:
         db.execute("DELETE FROM units WHERE map_id = ?", [map_id])
         db.execute("DELETE FROM types WHERE map_id = ?", [map_id])
+        db.execute("DELETE FROM amounts WHERE map_id = ?", [map_id])
         db.execute("DELETE FROM maps WHERE id = ?", [map_id])
+        db.execute("DELETE FROM user_roles WHERE map_id = ?", [map_id])
         con.commit()
-
-        return redirect("/cabinet")
+        session['map_id'] = None
+        return redirect("/selectmap")
     
 
 @app.route("/changeTheAmount", methods = ["POST"])
 def changeTheAmount():
+
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
+    
+    map_id = session['map_id']
+    
+    if (type(map_id) == type(None)):
+        return redirect("/selectmap")
+    
     
     if not request.form.get("type_action"):
         return render_template("error.html", error = "Action is unknown")
@@ -451,14 +522,20 @@ def approve():
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
     
+    map_id = session['map_id']
+    
+    if (type(map_id) == type(None)):
+        return redirect("/selectmap")
+    
+    
     user_id = session["user_id"]
-    role = db.execute("SELECT role FROM users WHERE id = ?", ([user_id])).fetchone()
+    role = db.execute("SELECT role FROM user_roles WHERE user_id = ? AND map_id = ?", ([user_id, map_id])).fetchone()
     if role[0] != "admin":
         return render_template("error.html", error="Users can only be approved by admins")
     
     if request.method == "GET":
 
-        users = db.execute("SELECT id, username, country FROM users WHERE role = ?", ["not_activated"]).fetchall()
+        users = db.execute("SELECT u.id, u.username, u.country, u.registration_date FROM users u JOIN user_roles ur ON u.id = ur.user_id AND ur.role = ? AND ur.map_id = ?", ["not_activated", map_id]).fetchall()
         return render_template("approval.html", users = users)
     
     else:
@@ -468,7 +545,7 @@ def approve():
         
         try:
             user_id = int(request.form.get("user_id"))
-            db.execute("UPDATE users SET role = ? WHERE id = ?", [str(request.form.get("action")), user_id])
+            db.execute("UPDATE user_roles SET role = ? WHERE user_id = ? AND map_id = ?", [str(request.form.get("action")), user_id, map_id])
             con.commit()
         except:
             return render_template("error.html", error = "Failed to process the user")
@@ -480,9 +557,15 @@ def deletemarker():
 
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
+    
+    map_id = session['map_id']
+    
+    if (type(map_id) == type(None)):
+        return redirect("/selectmap")
+    
 
     user_id = session["user_id"]
-    role = db.execute("SELECT role FROM users WHERE id = ?", ([user_id])).fetchone()
+    role = db.execute("SELECT role FROM user_roles WHERE user_id = ? AND map_id = ?", ([user_id, map_id])).fetchone()
     if role[0] != "admin":
         return render_template("error.html", error="Markers can only be deleted by admins")
     
@@ -494,3 +577,39 @@ def deletemarker():
         return redirect("/")
     except:
         return render_template("error.html", error = "Failed to process the marker")
+
+
+
+@app.route("/block", methods = ["GET", "POST"])
+def block():
+
+    if (str(session) == "<FileSystemSession {}>"):
+        return redirect("/")
+    
+    map_id = session['map_id']
+    
+    if (type(map_id) == type(None)):
+        return redirect("/selectmap")
+    
+    
+    user_id = session["user_id"]
+    role = db.execute("SELECT role FROM user_roles WHERE user_id = ? AND map_id = ?", ([user_id, map_id])).fetchone()
+    if role[0] != "admin":
+        return render_template("error.html", error="Users can only be blocked by admins")
+    
+    if request.method == "GET":
+        users = db.execute("SELECT u.id, u.username, u.country, ur.role, u.registration_date FROM users u JOIN user_roles ur ON u.id = ur.user_id AND ur.map_id = ? AND (ur.role = ? OR ur.role = ?)", [map_id, "activated", "blocked"]).fetchall()
+        return render_template("block.html", users = users)
+
+    else:
+        actions = ["activated", "blocked"]
+        if not request.form.get("action") or request.form.get("action") not in actions:
+            return render_template("error.html", error = "Invalid action")
+        
+        try:
+            user_id = int(request.form.get("user_id"))
+            db.execute("UPDATE user_roles SET role = ? WHERE user_id = ? AND map_id = ?", [str(request.form.get("action")), user_id, map_id])
+            con.commit()
+        except:
+            return render_template("error.html", error = "Failed to process the user")
+        return redirect("/block")
