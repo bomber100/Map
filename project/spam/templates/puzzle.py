@@ -283,6 +283,7 @@ class Puzzle():
                                     SymbolGrid[i].ChangeSymbolInCell("")
                             print("Symbol removed")
                             minusScore -= 10
+        SymbolGrid[0].ChangeSymbolInCell("*")
         if(minusScore == 0):
             print("No symbol found!")  
         return minusScore
@@ -340,7 +341,10 @@ class Cell():
         self.__SymbolsNotAllowed.append(SymbolToAdd)
 
     def RemoveFromNotAllowedSymbols(self, SymbolToRemove):
-        self.__SymbolsNotAllowed.remove(SymbolToRemove)
+        if SymbolToRemove in self.__SymbolsNotAllowed:
+            self.__SymbolsNotAllowed.remove(SymbolToRemove)
+        else:
+            pass
 
     def UpdateCell(self):
         pass

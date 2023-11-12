@@ -103,7 +103,7 @@ def index():
             
             theTypes = db.execute("SELECT t.type FROM unit_relations ur JOIN types t ON ur.unit_id = ? AND t.type != -1 AND t.id = ur.type_id", [int(marker[3])]).fetchall()
             #print(theTypes)
-            unitAmount = db.execute("SELECT a.id, a.value FROM unit_relations u JOIN amounts a ON u.amount_id = a.id AND u.unit_id = ? AND u.Amount_id != -1 LIMIT 1", [int(marker[3])]).fetchone()
+            unitAmount = db.execute("SELECT a.id, a.value FROM units u JOIN amounts a ON u.amount = a.id AND u.id = ? AND u.amount != -1", [int(marker[3])]).fetchone()
             
             for theType in theTypes:
                 marker_type += theType[0]
@@ -219,11 +219,11 @@ def report():
     amount = int(request.form.get("amount"))
     neededId = db.execute("SELECT max(id) FROM units").fetchone()[0] + 1
     print("Needed id is: " + str(neededId))
-    db.execute("INSERT INTO units(id, user_id, name, lat, lng, country, comment, map_id) values(?, ?, ?, ?, ?, ?, ?, ?)", [neededId, user_id, (str(request.form.get("name"))),
-        lat, lng, str(request.form.get("country")), str(request.form.get("comment")), (map_id)])
+    db.execute("INSERT INTO units(id, user_id, name, lat, lng, country, comment, map_id, amount) values(?, ?, ?, ?, ?, ?, ?, ?, ?)", [neededId, user_id, (str(request.form.get("name"))),
+        lat, lng, str(request.form.get("country")), str(request.form.get("comment")), (map_id), amount])
     
     for i in reportedType:
-        db.execute("INSERT INTO unit_relations(unit_id, type_id, amount_id) values(?, ?, ?)", [neededId, int(i), amount])
+        db.execute("INSERT INTO unit_relations(unit_id, type_id) values(?, ?)", [neededId, int(i)])
     
     con.commit()
 
@@ -376,7 +376,6 @@ def createmap():
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/")
     
-    map_id = session['map_id']
     user_id = session["user_id"]
 
     if request.method == "GET":
@@ -390,7 +389,7 @@ def createmap():
         db.execute("INSERT INTO maps(name) VALUES(?)", [str(map_name)])
         new_id = int(db.execute("SELECT id FROM maps WHERE name = ?", [str(map_name)]).fetchone()[0]) 
         session["map_id"] = new_id
-        db.execute("INSERT INTO user_roles(user_id, role, map_id) VALUES (?, ?, ?)", [user_id, "admin", map_id])
+        db.execute("INSERT INTO user_roles(user_id, role, map_id) VALUES (?, ?, ?)", [user_id, "admin", new_id])
 
         con.commit()
         return redirect("/addtypes")
@@ -417,6 +416,7 @@ def selectmap():
         return redirect("/cabinet")
 
 
+
 @app.route("/addtypes", methods=["GET", "POST"])
 def addtypes():
     
@@ -439,12 +439,52 @@ def addtypes():
         name = request.form.get("name")
         if not name:
             return render_template("error.html", error = "Must provide type")
-        print(map_id)
+        # print(map_id)
+        same = db.execute("SELECT * FROM types  WHERE map_id = ? AND type = ?", [map_id, name])
+        if(type(same) == type(None)):
+            return render_template("error.html", error = "This type already exists")
         db.execute("INSERT INTO types(type, map_id) VALUES(?, ?)", [str(name), map_id])
+        types = db.execute("SELECT id, type FROM types WHERE map_id = ? ORDER BY id", [map_id]).fetchall()
+        con.commit()
+        doneAction = "/addamounts"
+        doneVisibility = ""
+        return render_template("addtypes.html", doneAction = doneAction, doneVisibility = doneVisibility, types = types)
+    
+
+
+@app.route("/addamounts", methods=["GET", "POST"])
+def addamounts():
+    
+    if (str(session) == "<FileSystemSession {}>"):
+        return redirect("/")
+    
+    map_id = session['map_id']
+    
+    if (type(map_id) == type(None)):
+        return redirect("/selectmap")
+    
+    
+    doneAction = "/addamounts"
+    doneVisibility = "class=hidden"
+
+    if request.method == "GET":
+        return render_template("addamounts.html", doneAction = doneAction, doneVisibility = doneVisibility)
+    
+    else:
+        name = request.form.get("name")
+        if not name:
+            return render_template("error.html", error = "Must provide amount")
+        # print(map_id)
+        same = db.execute("SELECT * FROM amounts WHERE map_id = ? AND value = ?", [map_id, name])
+        if(type(same) == type(None)):
+            return render_template("error.html", error = "This amount already exists")
+        db.execute("INSERT INTO amounts(value, map_id) VALUES(?, ?)", [str(name), map_id])
+        amounts = db.execute("SELECT id, value FROM amounts WHERE map_id = ? ORDER BY id", [map_id]).fetchall()
         con.commit()
         doneAction = "/"
         doneVisibility = ""
-        return render_template("addtypes.html", doneAction = doneAction, doneVisibility = doneVisibility)
+        return render_template("addamounts.html", doneAction = doneAction, doneVisibility = doneVisibility, amounts = amounts)
+
 
 
 @app.route("/deletemap")

@@ -7,19 +7,19 @@
 {% block body %}
 
     <div class="vertcenter">
-        <h2 style="text-align: center;">Add Types:</h2>
-        <form action="/addtypes" method="post" style="text-align: center;">
+        <h2 style="text-align: center;">Add Amounts:</h2>
+        <form action="/addamounts" method="post" style="text-align: center;">
             <div class="form-group">
-                <input autocomplete="off" autofocus class="form-control" name="name" placeholder="Type" type="text">
+                <input autocomplete="off" autofocus class="form-control" name="name" placeholder="Amount" type="text">
             </div>
             <button class="btn btn-primary" type="submit">Add</button>
         </form>
-        <center><h4>Already Added Types:</h4></center>
+        <center><h4>Already Added Amounts:</h4></center>
         <table>
         <tbody>
-            {% for type in types %}
+            {% for amount in amounts %}
             <tr>
-                <td><input autocomplete="off" autofocus class="form-control" name="{{ type[0] }}" id="{{ type[0] }}" value="{{ type[1] }}" type="text" readonly></td>
+                <td><input autocomplete="off" autofocus class="form-control" name="{{ amount[0] }}" id="{{ amount[0] }}" value="{{ amount[1] }}" type="text" readonly></td>
             </tr>
             {% endfor %}
         </tbody>
