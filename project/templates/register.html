@@ -6,6 +6,7 @@
 
 {% block body %}
     <form action="/register" method="post">
+        <div class="vertcenter">
         <div class="form-group">
             <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text">
             <input autocomplete="off" autofocus class="form-control" name="country" placeholder="Country" type="text">
@@ -15,5 +16,6 @@
         <center>
         <button class="btn btn-primary" style="text-align: center;" type="submit">Register</button>
         </center>
+        </div>
     </form>
 {% endblock %}

@@ -64,22 +64,27 @@ def login():
 def index():
     admin = False
     adminVisibility = "class=hidden"
-    # print(map_id)
     
     if (str(session) == "<FileSystemSession {}>"):
         print("something")
-        return render_template("loginstart.html")
+        return redirect("/login")
     else:
         user_id = session["user_id"]
         map_id = session['map_id']
         role = db.execute("SELECT role FROM user_roles WHERE user_id = ? AND map_id = ?", ([user_id, map_id])).fetchone()
+        approvalNeeded = db.execute("SELECT approval_needed FROM maps WHERE id = ?", [map_id]).fetchone()
 
         if type(role) == type(None):
-            db.execute("INSERT INTO user_roles(user_id, role, map_id) VALUES (?, ?, ?)", [user_id, "not_activated", map_id])
+            if (approvalNeeded[0]):
+                db.execute("INSERT INTO user_roles(user_id, role, map_id) VALUES (?, ?, ?)", [user_id, "not_activated", map_id])
+                role = ("not_activated")
+            else:
+                db.execute("INSERT INTO user_roles(user_id, role, map_id) VALUES (?, ?, ?)", [user_id, "activated", map_id])
+                role = ("activated")
             con.commit()
-            return render_template("error.html", error = "Your account is not activated. Please contact the admins to be activated")
-
+        
         if role[0] == "not_activated":
+            print("index")
             return render_template("error.html", error = "Your account is not activated. Please contact the admins to be activated")
         
         if role[0] == "admin":
@@ -137,7 +142,7 @@ def logout():
     session.clear()
 
     # Redirect user to login form
-    return redirect("/")
+    return redirect("/login")
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -149,6 +154,9 @@ def register():
 
         elif not request.form.get("password"):
             return render_template("error.html", error = "Must provide password")
+        
+        elif len(request.form.get("password")) < 8:
+            return render_template("error.html", error = "Password must be at least 8 characters long")
 
         elif request.form.get("password") != request.form.get("confirmation"):
             return render_template("error.html", error = "Passwords don`t match")
@@ -173,7 +181,7 @@ def register():
 def report():
 
     if (str(session) == "<FileSystemSession {}>"):
-        return redirect("/")
+        return redirect("/login")
     
     map_id = session['map_id']
     
@@ -187,8 +195,7 @@ def report():
     
     if not request.form.get("lat"):
         return render_template("error.html", error = "Must provide latitude")
-    # elif not request.form.get("country"):
-    #     return render_template("error.html", error = "Must provide country")
+    
     elif not request.form.get("lat"):
         return render_template("error.html", error = "Must provide longitude")
     
@@ -201,8 +208,8 @@ def report():
     elif not request.form.get("name"):
         return render_template("error.html", error = "Must provide name")
 
-    elif len(str(request.form.get("comment"))) > 1000:
-        return render_template("error.html", error = "The comment is too long")
+    elif len(str(request.form.get("comment"))) > 200:
+        return render_template("error.html", error = "The comment must be less than 200 characters long")
 
 
     reportedType = request.form.getlist("type")
@@ -236,7 +243,7 @@ def report():
 def typechange():
 
     if (str(session) == "<FileSystemSession {}>"):
-        return redirect("/")
+        return redirect("/login")
     
     map_id = session['map_id']
     
@@ -252,7 +259,7 @@ def typechange():
 def amountchange():
 
     if (str(session) == "<FileSystemSession {}>"):
-        return redirect("/")
+        return redirect("/login")
     
     map_id = session['map_id']
     
@@ -268,7 +275,7 @@ def amountchange():
 def changeTheType():
 
     if (str(session) == "<FileSystemSession {}>"):
-        return redirect("/")
+        return redirect("/login")
     
     map_id = session['map_id']
     
@@ -304,7 +311,7 @@ def changeTheType():
 def cabinet():
 
     if (str(session) == "<FileSystemSession {}>"):
-        return redirect("/")
+        return redirect("/login")
     
     map_id = session['map_id']
     
@@ -315,10 +322,17 @@ def cabinet():
     isAdmin = "class=hidden"
     user_id = session["user_id"]
     role = db.execute("SELECT role FROM user_roles WHERE user_id = ? AND map_id = ?", ([user_id, map_id])).fetchone()
+    approvalNeeded = db.execute("SELECT approval_needed FROM maps WHERE id = ?", [map_id]).fetchone()
+    print(approvalNeeded)
 
     if type(role) == type(None):
-            db.execute("INSERT INTO user_roles(user_id, role, map_id) VALUES (?, ?, ?)", [user_id, "not_activated", map_id])
-            role = ("not_activated")
+            if(approvalNeeded[0]):
+                db.execute("INSERT INTO user_roles(user_id, role, map_id) VALUES (?, ?, ?)", [user_id, "not_activated", map_id])
+                print("cabinet")
+                role = ("not_activated")
+            else:
+                db.execute("INSERT INTO user_roles(user_id, role, map_id) VALUES (?, ?, ?)", [user_id, "activated", map_id])
+                role = ("activated")
             con.commit()
 
     elif role[0] == "admin":
@@ -331,7 +345,7 @@ def cabinet():
 def passwordChange():
 
     if (str(session) == "<FileSystemSession {}>"):
-        return redirect("/")
+        return redirect("/login")
 
     if request.method == "GET":
         return render_template("passwordchange.html")
@@ -374,7 +388,7 @@ def passwordChange():
 def createmap():
 
     if (str(session) == "<FileSystemSession {}>"):
-        return redirect("/")
+        return redirect("/login")
     
     user_id = session["user_id"]
 
@@ -383,10 +397,18 @@ def createmap():
 
     else:
         map_name = request.form.get("map_name")
+        approvalNeededstr = request.form.getlist("approvalNeeded")
+        approvalNeeded = False
+        
+        for i in approvalNeededstr:
+            approvalNeeded = True
+
         if (db.execute("SELECT name FROM maps WHERE name = ?", [str(map_name)]).fetchone() != None):
             return render_template("error.html", error = "Map with this name already exists")
         
-        db.execute("INSERT INTO maps(name) VALUES(?)", [str(map_name)])
+
+        
+        db.execute("INSERT INTO maps(name, approval_needed) VALUES(?, ?)", [str(map_name), approvalNeeded])
         new_id = int(db.execute("SELECT id FROM maps WHERE name = ?", [str(map_name)]).fetchone()[0]) 
         session["map_id"] = new_id
         db.execute("INSERT INTO user_roles(user_id, role, map_id) VALUES (?, ?, ?)", [user_id, "admin", new_id])
@@ -399,7 +421,7 @@ def createmap():
 def selectmap():
 
     if (str(session) == "<FileSystemSession {}>"):
-        return redirect("/")
+        return redirect("/login")
     
 
     # user_id = session["user_id"]
@@ -413,7 +435,7 @@ def selectmap():
     else: 
         map_id = int(request.form.get("map_id"))
         session["map_id"] = map_id
-        return redirect("/cabinet")
+        return redirect("/")
 
 
 
@@ -421,7 +443,7 @@ def selectmap():
 def addtypes():
     
     if (str(session) == "<FileSystemSession {}>"):
-        return redirect("/")
+        return redirect("/login")
     
     map_id = session['map_id']
     
@@ -491,7 +513,7 @@ def addamounts():
 def deletemap():
 
     if (str(session) == "<FileSystemSession {}>"):
-        return redirect("/")
+        return redirect("/login")
     
     map_id = session['map_id']
     
@@ -519,7 +541,7 @@ def deletemap():
 def changeTheAmount():
 
     if (str(session) == "<FileSystemSession {}>"):
-        return redirect("/")
+        return redirect("/login")
     
     map_id = session['map_id']
     
@@ -560,7 +582,7 @@ def changeTheAmount():
 def approve():
 
     if (str(session) == "<FileSystemSession {}>"):
-        return redirect("/")
+        return redirect("/login")
     
     map_id = session['map_id']
     
@@ -596,7 +618,7 @@ def approve():
 def deletemarker():
 
     if (str(session) == "<FileSystemSession {}>"):
-        return redirect("/")
+        return redirect("/login")
     
     map_id = session['map_id']
     
@@ -624,7 +646,7 @@ def deletemarker():
 def block():
 
     if (str(session) == "<FileSystemSession {}>"):
-        return redirect("/")
+        return redirect("/login")
     
     map_id = session['map_id']
     
@@ -653,3 +675,29 @@ def block():
         except:
             return render_template("error.html", error = "Failed to process the user")
         return redirect("/block")
+    
+
+@app.route("/deleteaccount", methods = ["POST"])
+def deleteaccount():
+
+    if (str(session) == "<FileSystemSession {}>"):
+        return redirect("/login")
+    
+    user_id = session["user_id"]
+    admined_maps = db.execute("SELECT m.name FROM user_roles u JOIN maps m ON u.role = ? AND u.user_id = ? AND u.map_id = m.id AND m.number_of_admins = ?", ["admin", user_id, 1]).fetchall()
+    
+    if type(admined_maps) != type(None):
+        error_str = "You are the only admin of the following maps: "
+        for i in admined_maps:
+            error_str += i[0]
+            error_str += ", "
+        error_str = error_str[:-2]
+        error_str += ". "
+        error_str += "Please promote another user before deleting your account"
+        return render_template("error.html", error = error_str)
+
+    db.execute("DELETE FROM user_roles WHERE user_id = ?", [user_id])
+    db.execute("DELETE FROM users WHERE user_id = ?", [user_id])
+    con.commit()
+    session.clear()
+    return redirect("/login")

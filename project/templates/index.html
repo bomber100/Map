@@ -9,142 +9,110 @@
 {% block body %}
 
 <center>
-<table>
-    <tr>
-        <td>
-            <div style="padding: 5%;">
-                <form action="/cabinet" method="get">
-                    <button class="btn btn-primary" type="submit">My account</button>
-                </form>
-            </div>
-        </td>
+
         
-        <td>
-            <div id = "map" style = "width:800px; height:600px; margin: auto; padding: 0%;" {{ visibility }}></div>
-            <form id="deleteForm" action="/deletemarker" method="post">
-                <input name="marker_id" type="hidden">
-            </form>
-            <script>
+    <div id = "map" style = "width:800px; height:600px; margin: auto; padding: 0%;" {{ visibility }}></div>
+    <form id="deleteForm" action="/deletemarker" method="post">
+        <input name="marker_id" type="hidden">
+    </form>
+    <script>
 
-                var deletion = false;
-                function SwitchDeletion() {
-                    deletion = !deletion;
-                    let deleteBtn = document.getElementById("deleteBtn");
-                    if (deletion) {
-                        deleteBtn.innerHTML = "Stop deleting markers";
+        var deletion = false;
+        function SwitchDeletion() {
+            deletion = !deletion;
+            let deleteBtn = document.getElementById("deleteBtn");
+            if (deletion) {
+                deleteBtn.innerHTML = "Stop deleting";
+            }
+            else {
+                deleteBtn.innerHTML = "Delete a marker";
+            }
+        }
+        function findComment(id, markers) {
+            for(pos of markers) {
+                if (pos.id == id) {
+                    var text = ""
+                    if (pos.comment == null || pos.comment == "" ) {
+                        text += pos.name;
+                    } else {
+                        text += pos.comment;
                     }
+                    text += '\n';
+                    text += pos.type;
+                    text += '\n';
+                    text += pos.amount;
+                    return text;
+                }
+            }
+        }
+
+        function loadMap() {
+            // Initialize Google Maps
+            var initLatLng = {lat: 49.844, lng: 24.01}
+            const mapOptions = {
+                center: initLatLng,
+                zoom: 13.5,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            }
+            const map = new google.maps.Map(document.getElementById("map"), mapOptions);
+
+            var allMarkers = JSON.parse('{{ markers|tojson }}');
+            for(position of allMarkers) {
+                let marker = new google.maps.Marker({
+                    map: map,
+                    position: new google.maps.LatLng(position.location[0], position.location[1]),
+                    title: position.name,
+                    label: position.name.substring(0,1),
+                    zIndex: position.id
+                })
+                var infowindow = new google.maps.InfoWindow({
+                    
+                });                    
+                google.maps.event.addListener(marker, 'click', function() {
+                    if (deletion == true) {
+                        let form = document.getElementById("deleteForm");
+                        
+                        if (form != null) {
+                            
+                            var idField = document.querySelector('input[name="marker_id"][type="hidden"]');
+                            
+                            var text = "Are you sure to delete this marker?";
+                            idField.setAttribute("value", marker.zIndex);
+                            console.log(marker);
+                            
+                            if (confirm(text) == true) {
+                                form.submit();
+                            }            
+                        }        
+                    }
+
                     else {
-                        deleteBtn.innerHTML = "Begin deleting markers";
+                        let popupComment = findComment(marker.zIndex, allMarkers);
+                        infowindow.setContent(popupComment);
+                        infowindow.open(map, marker);
                     }
-                }
-                function findComment(id, markers) {
-                    for(pos of markers) {
-                        if (pos.id == id) {
-                            var text = ""
-                            if (pos.comment == null || pos.comment == "" ) {
-                                text += pos.name;
-                            } else {
-                                text += pos.comment;
-                            }
-                            text += '\n';
-                            text += pos.type;
-                            text += '\n';
-                            text += pos.amount;
-                            return text;
-                        }
-                    }
-                }
-    
-                function loadMap() {
-                  // Initialize Google Maps
-                    var initLatLng = {lat: 49.844, lng: 24.01}
-                    const mapOptions = {
-                        center: initLatLng,
-                        zoom: 13.5,
-                        mapTypeId: google.maps.MapTypeId.ROADMAP
-                    }
-                    const map = new google.maps.Map(document.getElementById("map"), mapOptions);
-    
-                    var allMarkers = JSON.parse('{{ markers|tojson }}');
-                    for(position of allMarkers) {
-                        let marker = new google.maps.Marker({
-                          map: map,
-                          position: new google.maps.LatLng(position.location[0], position.location[1]),
-                          title: position.name,
-                          label: position.name.substring(0,1),
-                          zIndex: position.id
-                        })
-                        var infowindow = new google.maps.InfoWindow({
-                            
-                        });                    
-                        google.maps.event.addListener(marker, 'click', function() {
-                            if (deletion == true) {
-                                let form = document.getElementById("deleteForm");
-                                
-                                if (form != null) {
-                                    
-                                    var idField = document.querySelector('input[name="marker_id"][type="hidden"]');
-                                    
-                                    var text = "Are you sure to delete this marker?";
-                                    idField.setAttribute("value", marker.zIndex);
-                                    console.log(marker);
-                                    
-                                    if (confirm(text) == true) {
-                                        form.submit();
-                                    }            
-                                }        
-                            }
-
-                            else {
-                                let popupComment = findComment(marker.zIndex, allMarkers);
-                                infowindow.setContent(popupComment);
-                                infowindow.open(map, marker);
-                            }
-                        });
-                        // google.maps.event.addListener(marker, 'rightclick', function() {
-                            
-                        //     let form = document.getElementById("deleteForm");
-                        //     if (form != null) {
-                        //         var idField = document.querySelector('input[name="marker_id"][type="hidden"]');
-                        //         var text = "Are you sure to delete this marker?";
-                        //         idField.setAttribute("value", id);
-                        //         print("dddddddd")
-                        //         if (confirm(text) == true) {
-                        //             form.submit();
-                        //         }            
-                        //     }        
-                        // });
-                    }
-                    google.maps.event.addListener(map, "rightclick", function(event) {
-                        var lat = event.latLng.lat();
-                        var lng = event.latLng.lng();
-                        // populate yor box/field with lat, lng
-                        var latField = document.querySelector('input[name="lat"][type="text"]');
-                        var lngField = document.querySelector('input[name="lng"][type="text"]');
-                        latField.setAttribute("value", lat);
-                        lngField.setAttribute("value", lng);
-                    });    
-                }
+                });
                 
-                function deleteMap() {
-                    var text = "Are you sure to delete this map?"
-                    if(confirm(text) == true) {
-                        var form = document.getElementById("deleteMapForm");
-                        form.submit();
-                    }
-                }
-            </script>
-        </td>
-
-        <td>
-            <div style="padding: 5%;">
-                <form action="/logout" method="get" style="text-align: right;">
-                    <button class="btn btn-primary" type="submit">Log Out</button>
-                </form>
-            </div>
-        </td>
-    </tr>
-</table>
+            }
+            google.maps.event.addListener(map, "rightclick", function(event) {
+                var lat = event.latLng.lat();
+                var lng = event.latLng.lng();
+                // populate yor box/field with lat, lng
+                var latField = document.querySelector('input[name="lat"][type="text"]');
+                var lngField = document.querySelector('input[name="lng"][type="text"]');
+                latField.setAttribute("value", lat);
+                lngField.setAttribute("value", lng);
+            });    
+        }
+        
+        function deleteMap() {
+            var text = "Are you sure to delete this map?"
+            if(confirm(text) == true) {
+                var form = document.getElementById("deleteMapForm");
+                form.submit();
+            }
+        }
+    </script>
 
     </center>
         <script
@@ -159,9 +127,6 @@
                 <div class="form-group">
                     <input autocomplete="off" autofocus class="form-control" name="name" placeholder="Name" type="text">
                 </div>
-                <!--<div class="form-group">-->
-                <!--    <input autocomplete="off" autofocus class="form-control" name="country" placeholder="Country" type="text">-->
-                <!--</div>-->
                 <div class="form-group">
                     <h4>Right-click the map to get coordinates</h4>
                 </div>
@@ -172,7 +137,6 @@
                     <input autocomplete="off" autofocus class="form-control" name="lng" placeholder="Longitude" type="text">
                 </div>
                 
-                <center>
                     <div class="form-group">
                         <legend>Type: </legend>
                         {% for type in types %}
@@ -181,14 +145,6 @@
                             <label for="{{ type[0] }}" >{{ type[1] }}</label>
                         </div>
                         {% endfor %}
-                    
-                        <!-- <select class="form-select mx-auto w-auto" name="type" size="5" multiple>
-                            <option disabled selected>Type</option>
-                            {% for type in types %}
-                            <option value={{ type[0] }}>{{ type[1] }}</option>
-                            {% endfor %}
-                        </select> -->
-                    
                     
                         <legend>Amount:</legend>
                         <div class="form-group">
@@ -203,39 +159,46 @@
                         </div>
                     </div>
                 
-                    <!-- <select class="form-select mx-auto w-auto" name="amount" size="5" multiple>
-                        <option disabled selected>Amount</option>
-                        {% for amount in amounts %}
-                            <option value={{ amount[0] }}>{{ amount[1] }}</option>
-                        {% endfor %}
-                    </select> -->
-                
                 <div class="form-group">
                     <textarea autocomplete="off" autofocus class="form-control" name="comment" placeholder="Comment" cols="40" rows="5" maxlength="1000"></textarea>
                 </div>
-                <button class="btn btn-primary" type="submit">Report</button>
+                <div style="text-align: center;">
+                    <button class="btn btn-primary"  type="submit">Report</button>
+                </div>
             </form>
             
-            <div {{ adminVisibility }} class="form-group">
-                <form action="/typechange" style="text-align: center;">
-                    <button class="btn btn-primary" type="submit">Edit types</button>
-                </form>
-            </div>
-            <div {{ adminVisibility }} class="form-group">
-                <form action="/amountchange" style="text-align: center;">
-                    <button class="btn btn-primary" type="submit">Edit amounts</button>
-                </form>
-            </div>
-        </center>
-            <div {{ adminVisibility }} class="form-group" style="text-align: center;">
-                <button style="text-align: center;" class="btn btn-danger" id="deleteBtn" type="button" onclick="SwitchDeletion()">Begin deleting markers</button>
-            </div>
-            <div {{ adminVisibility }} style="text-align: center;" class="form-group">
-                <form id="deleteMapForm" action="/deletemap" style="text-align: center;"></form>
-                <button class="btn btn-danger" onclick="deleteMap()">Delete map</button>
-            </div>
         </div>
     </table>
+    </div>
+
+    <div class="menu" style="width: 200px;">
+        <div>
+            <form action="/cabinet" method="get">
+                <button class="btn btn-primary menu" type="submit">My account</button>
+            </form>
+        </div>
+        <div>
+            <form action="/logout" method="get" >
+                <button class="btn btn-primary menu" type="submit">Log Out</button>
+            </form>
+        </div>
+        <div {{ adminVisibility }} class="form-group">
+            <form action="/typechange">
+                <button class="btn btn-primary menu" type="submit">Edit types</button>
+            </form>
+        </div>
+        <div {{ adminVisibility }} class="form-group">
+            <form action="/amountchange">
+                <button class="btn btn-primary menu" type="submit">Edit amounts</button>
+            </form>
+        </div>
+        <div {{ adminVisibility }} class="form-group">
+            <button style="text-align: center;" class="btn btn-danger menu" id="deleteBtn" type="button" onclick="SwitchDeletion()">Delete a marker</button>
+        </div>
+        <div {{ adminVisibility }} class="form-group">
+            <form id="deleteMapForm" action="/deletemap" style="text-align: center;"></form>
+            <button class="btn btn-danger menu" onclick="deleteMap()">Delete map</button>
+        </div>
     </div>
 
 {% endblock %}

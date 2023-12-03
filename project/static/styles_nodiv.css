@@ -39,3 +39,15 @@ button, input[type="submit"] {
     transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     vertical-align: middle;
 }
+
+.menu{
+    position: sticky;
+    table-layout: fixed;
+    width: 200px !important;
+    top: 5%;
+    left: 90%;
+    transform: translate(-90%,-5%);
+    /* border: 5px solid #0000FF; */
+    padding: 5px;
+}
+
