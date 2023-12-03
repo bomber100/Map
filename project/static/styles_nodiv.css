@@ -41,13 +41,25 @@ button, input[type="submit"] {
 }
 
 .menu{
+    top: 10%;
+    left: 90%;
+    padding: 5px;
+}
+.menu-buttons{
+    vertical-align:top;
+}
+
+.btn{
+    width: 140px;
+}
+
+.report-btn{
     position: sticky;
     table-layout: fixed;
-    width: 200px !important;
+    width: 200px;
     top: 5%;
     left: 90%;
     transform: translate(-90%,-5%);
     /* border: 5px solid #0000FF; */
     padding: 5px;
 }
-
