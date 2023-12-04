@@ -25,7 +25,10 @@
     <td>{{ user[4] }}</td>
     {% if user[3] == "blocked" %}
     <td>
-        <button class="btn btn-primary" type="button" name="approve_btn" id = {{ user[0] }} onclick='check("{{ user[1] }}", "{{ user[0] }}", true)'>Unblock</button>
+        <div class="tooltip">
+            <button class="btn btn-primary" type="button" name="approve_btn" id = {{ user[0] }} onclick='check("{{ user[1] }}", "{{ user[0] }}", true)'>Unblock</button>
+            <span class="tooltiptext">Block reason: {{ user[5] }}</span>
+        </div>
     </td>
     {% else %}
     <td>

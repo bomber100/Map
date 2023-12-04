@@ -665,7 +665,7 @@ def block():
         return render_template("error.html", error="Users can only be blocked by admins")
     
     if request.method == "GET":
-        users = db.execute("SELECT u.id, u.username, u.country, ur.role, u.registration_date FROM users u JOIN user_roles ur ON u.id = ur.user_id AND ur.map_id = ? AND (ur.role = ? OR ur.role = ?)", [map_id, "activated", "blocked"]).fetchall()
+        users = db.execute("SELECT u.id, u.username, u.country, ur.role, u.registration_date, ur.reason FROM users u JOIN user_roles ur ON u.id = ur.user_id AND ur.map_id = ? AND (ur.role = ? OR ur.role = ?)", [map_id, "activated", "blocked"]).fetchall()
         return render_template("block.html", users = users)
 
     else:
