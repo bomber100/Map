@@ -675,7 +675,8 @@ def block():
         
         try:
             user_id = int(request.form.get("user_id"))
-            db.execute("UPDATE user_roles SET role = ? WHERE user_id = ? AND map_id = ?", [str(request.form.get("action")), user_id, map_id])
+            reason = str(request.form.get("reason"))
+            db.execute("UPDATE user_roles SET role = ?, reason = ? WHERE user_id = ? AND map_id = ?", [str(request.form.get("action")), reason, user_id, map_id])
             con.commit()
         except:
             return render_template("error.html", error = "Failed to process the user")
