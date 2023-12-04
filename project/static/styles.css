@@ -42,3 +42,12 @@ button, input[type="submit"] {
 div {
     padding: 5%;
 }
+
+th, td {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+.btn{
+    width: 160px;
+}  

@@ -7,7 +7,7 @@
 {% block body %}
 
     <div class="vertcenter">
-        <h2 style="text-align: center;">My account:</h2>
+        <h2 style="text-align: center;">My account: <i>{{ user_Name[0] }} </i></h2>
         <form action="/passwordchange" method="get" style="text-align: center;">
             <div class="form-group">
                 <button class="btn btn-primary" type="submit">Change password</button>

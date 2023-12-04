@@ -1,7 +1,7 @@
 {% extends "nostyle_layout.html" %}
 
 {% block title %}
-    Map
+   {{ map_name[0] }}
 {% endblock %}
 
 {% block load%}onload = "loadMap()"{% endblock %}
@@ -36,10 +36,13 @@
                     } else {
                         text += pos.comment;
                     }
-                    text += '\n';
-                    text += pos.type;
-                    text += '\n';
-                    text += pos.amount;
+                    if(pos.type != "") {
+                        text += '<br />' + pos.type;
+                    }
+                    if (pos.amount != "") {
+                        text += '<br />' + pos.amount;
+                    }
+                    
                     return text;
                 }
             }
@@ -47,19 +50,30 @@
 
         function loadMap() {
             // Initialize Google Maps
-            var initLatLng = {lat: 49.844, lng: 24.01}
+            // var initLatLng = {lat: 49.844, lng: 24.01}
+            var defaultLat = parseFloat('{{ avgPositions[0] }}');
+            var defaultLng = parseFloat('{{ avgPositions[1] }}');
+            var initLatLng = {lat: defaultLat, lng: defaultLng};
+            
+            console.log(initLatLng);
+
             const mapOptions = {
                 center: initLatLng,
                 zoom: 13.5,
                 mapTypeId: google.maps.MapTypeId.ROADMAP
             }
             const map = new google.maps.Map(document.getElementById("map"), mapOptions);
+            
+            var bounds = new google.maps.LatLngBounds();
 
             var allMarkers = JSON.parse('{{ markers|tojson }}');
             for(position of allMarkers) {
+                var pos = new google.maps.LatLng(position.location[0], position.location[1]);
+                bounds.extend(pos);
+
                 let marker = new google.maps.Marker({
                     map: map,
-                    position: new google.maps.LatLng(position.location[0], position.location[1]),
+                    position: pos,
                     title: position.name,
                     label: position.name.substring(0,1),
                     zIndex: position.id
@@ -91,7 +105,7 @@
                         infowindow.open(map, marker);
                     }
                 });
-                
+                map.fitBounds(bounds);
             }
             google.maps.event.addListener(map, "rightclick", function(event) {
                 var lat = event.latLng.lat();

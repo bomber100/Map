@@ -92,12 +92,16 @@ def index():
 
 
     markers = []
+    avgPositions = [51.505922705780414, -0.07502156799536142] # London Tower Bridge
     types = db.execute("SELECT id, type FROM types WHERE map_id = ? ORDER BY id", [map_id]).fetchall()
     amounts = db.execute("SELECT id, value FROM amounts WHERE map_id = ? ORDER BY id", [map_id]).fetchall()
+    map_name = db.execute("SELECT name FROM maps WHERE id = ?", [map_id]).fetchone()
     unitAmount = []
 
     if admin == True:
         reportedMarkers = db.execute("SELECT name, lat, lng, id, comment FROM units WHERE map_id = ?", [map_id]).fetchall()
+        if len(reportedMarkers) > 0:
+            avgPositions = db.execute("SELECT avg(lat), avg(lng) FROM units WHERE map_id = ?", [map_id]).fetchone()
         
         adminVisibility = ""
         
@@ -132,7 +136,7 @@ def index():
             m = {'name': marker[0], 'location': [marker[1], marker[2]], 'comment': comment, 'id': marker[3], 'type': marker_type, 'amount': marker_amount}
             markers.append(m)
 
-    return render_template("index.html", types=types, markers=markers, adminVisibility=adminVisibility, amounts = amounts, unitAmount = unitAmount)
+    return render_template("index.html", types = types, markers = markers, adminVisibility = adminVisibility, amounts = amounts, unitAmount = unitAmount, map_name = map_name, avgPositions = avgPositions)
 
 @app.route("/logout")
 def logout():
@@ -323,6 +327,8 @@ def cabinet():
     user_id = session["user_id"]
     role = db.execute("SELECT role FROM user_roles WHERE user_id = ? AND map_id = ?", ([user_id, map_id])).fetchone()
     approvalNeeded = db.execute("SELECT approval_needed FROM maps WHERE id = ?", [map_id]).fetchone()
+    user_Name = db.execute("SELECT username FROM users WHERE id = ?", [user_id]).fetchone()
+
     print(approvalNeeded)
 
     if type(role) == type(None):
@@ -338,8 +344,7 @@ def cabinet():
     elif role[0] == "admin":
         isAdmin = ""
 
-    return render_template("cabinet.html", isAdmin = isAdmin)
-    
+    return render_template("cabinet.html", isAdmin = isAdmin, user_Name = user_Name)    
 
 @app.route("/passwordchange", methods = ["GET", "POST"])
 def passwordChange():

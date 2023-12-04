@@ -8,6 +8,7 @@
 
 <h2 style="text-align: center; color: blue;">List of active users:</h2>
 <center>
+
 <table>
     <tr>
         <th>Username</th>
@@ -34,6 +35,7 @@
 </tr>
 {% endfor %}
 </table>   
+
 </center>
 <form id="blockForm" action="/block" method="post" >
     <input name="action" type="hidden" value="">
@@ -67,13 +69,17 @@
                     }            
                 }
                 else {
-                    if (confirm(text) == true) {
+                    let reason = prompt("Please enter a reason for blocking the user");
+                    if (reason == "") {
+                        alert("Reason should not be empty");
+                        exit;
+                    }    
+                    
+                    if (reason != null) {  //Cancel pressed
                         actionField.setAttribute("value", action);
-                        let reason = prompt("Please enter a reason for blocking the user");
                         reasonField.setAttribute("value", reason)
                         form.submit();
                     }    
-                    
                 }
             }        
     }
