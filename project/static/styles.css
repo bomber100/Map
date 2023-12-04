@@ -4,7 +4,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
     border: 5px solid #0000FF;
-    padding: 20px;
+    padding: 10px;
 }
 
 .horcenter{
@@ -49,7 +49,7 @@ th, td {
   }
 
 .btn{
-    width: 160px;
+    width: 180px;
 }  
 
 /* Tooltip container */
