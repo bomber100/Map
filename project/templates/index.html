@@ -182,35 +182,50 @@
             </div>
             
             <div class="form-group">
-                <legend>Type: </legend>
-                {% for type in types %}
-                <div class="form-group">
-                    <input type="checkbox" name="type" id="{{ type[0] }}" value="{{ type[0] }}"/>
-                    <label for="{{ type[0] }}" >{{ type[1] }}</label>
+                <div data-name="check">
+                    <legend>Type: </legend>
+                    {% for type in types %}
+                    <div class="form-group">
+                        <input type="checkbox" name="type" id="{{ type[0] }}" value="{{ type[0] }} "/>
+                        <label for="{{ type[0] }}" >{{ type[1] }}</label>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            
+                <script type="text/javascript">  // only one selection
+                    var last;
+                    document.addEventListener('input',(e)=>{
+                        var closest=e.target.closest("*[data-name='check']");
+                        // console.log(closest)
+                        if(e.target.closest("*[data-name]")){
+                            if(last)
+                              last.checked=false;
+                        }
+                        e.target.checked=true;
+                        last=e.target;
+                    })
+                </script>
+
                 <legend>Amount:</legend>
                 <div class="form-group">
-                <select name="amount" id="amount">
-                <option disabled selected>Amount</option>
-                {% for amount in amounts %}
-                
-                <option value="{{ amount[0] }}">{{ amount[1] }}</option>
-                
-                {% endfor %}
-                </select>
+                    <select name="amount" id="amount">
+                    <option disabled selected>Amount</option>
+                    {% for amount in amounts %}
+                    
+                    <option value="{{ amount[0] }}">{{ amount[1] }}</option>
+                    
+                    {% endfor %}
+                    </select>
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <textarea autocomplete="off" autofocus class="form-control" name="comment" placeholder="Comment" cols="40" rows="5" maxlength="1000"></textarea>
             </div>
             <div style="text-align: center;">
-                <button class="report-btn btn-primary"  type="submit">Report</button>
+                <button class="report-btn btn-primary" type="submit">Report</button>
             </div>
         </form>
-    </table>            
+    </table>
 </div>
 
 {% endblock %}
