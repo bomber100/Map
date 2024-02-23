@@ -8,8 +8,7 @@ def index():
         return redirect("/login")    
     if 'map_id' not in session:
         return redirect("/selectmap")
-    
-    db = getCursor()
+        
     isAdmin = False
     adminVisibility = "class=hidden"
     
@@ -24,33 +23,36 @@ def index():
         isAdmin = True
 
     markers = []
-    avgPositions = [51.505922705780414, -0.07502156799536142] # London Tower Bridge
+    avgPositions = [51.505922705780414, -0.07502156799536142] # London Tower Bridge as a default
+    
+    db = getCursor()
     types = db.execute("SELECT id, type FROM types WHERE map_id = ? ORDER BY id", [map_id]).fetchall()
     amounts = db.execute("SELECT id, value FROM amounts WHERE map_id = ? ORDER BY id", [map_id]).fetchall()
     map_name = db.execute("SELECT name FROM maps WHERE id = ?", [map_id]).fetchone()
     unitAmount = []
 
     if isAdmin == True:
-        reportedMarkers = db.execute("SELECT name, lat, lng, id, comment FROM units WHERE map_id = ?", [map_id]).fetchall()
+        reportedMarkers = db.execute("SELECT name, lat, lng, id, comment FROM locations WHERE map_id = ?", [map_id]).fetchall()
         if len(reportedMarkers) > 0:
-            avgPositions = db.execute("SELECT avg(lat), avg(lng) FROM units WHERE map_id = ?", [map_id]).fetchone()
+            avgPositions = db.execute("SELECT avg(lat), avg(lng) FROM locations WHERE map_id = ?", [map_id]).fetchone()
         
         adminVisibility = ""
         
         for marker in reportedMarkers:
-            json = makeJson(marker, db)
+            json = makeJson(marker)
             markers.append(json)
 
     return render_template("index.html", types = types, markers = markers, adminVisibility = adminVisibility, amounts = amounts, unitAmount = unitAmount, map_name = map_name, avgPositions = avgPositions)
 
 
-def makeJson(marker, db):
+def makeJson(marker):
     marker_type = ""
     marker_amount = ""
     
-    types = db.execute("SELECT t.type FROM unit_relations ur JOIN types t ON ur.unit_id = ? AND t.type != -1 AND t.id = ur.type_id", [int(marker[3])]).fetchall()
+    db = getCursor()
+    types = db.execute("SELECT t.type FROM type_relations r JOIN types t ON t.id = r.type_id WHERE r.location_id = ? AND t.type != -1", [int(marker[3])]).fetchall()
 
-    unitAmount = db.execute("SELECT a.id, a.value FROM units u JOIN amounts a ON u.amount = a.id AND u.id = ? AND u.amount != -1", [int(marker[3])]).fetchone()
+    unitAmount = db.execute("SELECT a.id, a.value FROM locations l JOIN amounts a ON a.id = l.amount_id WHERE l.id = ? AND l.amount_id != -1", [int(marker[3])]).fetchone()
     
     for t in types:
         marker_type += t[0]
@@ -79,11 +81,13 @@ def getUserRole(user_id, map_id):
 
     if type(role) == type(None):
         if (approvalNeeded[0]):
-            db.execute("INSERT INTO user_roles(user_id, role, map_id) VALUES (?, ?, ?)", [user_id, "not_activated", map_id])
-            role = ("not_activated")
+            roleName = "not_activated"
         else:
-            db.execute("INSERT INTO user_roles(user_id, role, map_id) VALUES (?, ?, ?)", [user_id, "activated", map_id])
-            role = ("activated")
+            roleName = "activated"
+        
+        db.execute("INSERT INTO user_roles(user_id, role, map_id) VALUES (?, ?, ?)", [user_id, roleName, map_id])
         db.connection.commit()  
+    else: 
+        roleName = role[0]
 
-    return role[0]
+    return roleName

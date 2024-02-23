@@ -30,11 +30,11 @@ def register_route():
 
 @app.route("/deleteaccount", methods = ["POST"])
 def deleteaccount_route():
-    return deleteaccount()
+    return deleteAccount()
 
 @app.route("/block", methods = ["GET", "POST"])
 def block_route():
-    return block_user()
+    return blockUser()
 
 @app.route("/")
 def index_route():
@@ -43,27 +43,27 @@ def index_route():
 ############ type routines ####################
 @app.route("/typechange")
 def typechange_route():
-    return typechange()
+    return typeChangeForm()
 
 @app.route("/amountchange")
 def amountchange_route():
-    return amountchange()
+    return amountChangeForm()
 
 @app.route("/changeTheType", methods = ["POST"])
-def changeTheType_route():
-    return changeTheType()
+def changeType_route():
+    return changeType()
 
 @app.route("/addtypes", methods=["GET", "POST"])
 def addtypes_route():
-    return addtypes()
+    return addTypes()
 
 @app.route("/addamounts", methods=["GET", "POST"])
 def addamounts_route():
-    return addamounts()
+    return addAmounts()
 
 @app.route("/changeTheAmount", methods = ["POST"])
-def changeTheAmount_route():
-    return changeTheAmount()
+def changeAmount_route():
+    return changeAmount()
 
 ############ users routines ####################
 @app.route("/cabinet")
@@ -76,25 +76,25 @@ def passwordChange_route():
 
 @app.route("/approve", methods=["GET", "POST"])
 def approve_route():
-    return approve_user()
+    return approveUser()
 
 ############ map routines ####################
 @app.route("/createmap", methods=["GET", "POST"])
 def createmap_route():
-    return createmap()
+    return createMap()
 
 @app.route("/selectmap", methods=["GET", "POST"])
 def selectmap_route():
-    return selectmap()
+    return selectMap()
 
 @app.route("/deletemap")
 def deletemap_route():
-    return deletemap()
+    return deleteMap()
     
 @app.route("/deletemarker", methods = ["POST"])
 def deletemarker_route():
-    return deletemarker()
+    return deleteMarker()
 
 @app.route("/report", methods=["GET", "POST"])
 def report_route():
-    return add_marker()
+    return addMarker()

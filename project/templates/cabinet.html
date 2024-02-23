@@ -40,10 +40,20 @@
             </form>
         </div>
         <div>
-            <form action="/deleteaccount" method="post" style="text-align: center;">
-                <button class="btn btn-danger" type="submit">Delete My Account</button>
+            <form id="deleteAccountForm" action="/deleteaccount" method="post" style="text-align: center;">
+                <button class="btn btn-danger" type="button" onclick='doDeleteAccount()'>Delete My Account</button>
             </form>
         </div>
     </div>
     
+
+<script>    
+    function doDeleteAccount() {
+        var text = "This action cannot be undone.\nAre you sure to delete your account?";
+        if (confirm(text) == true) {
+            var form = document.getElementById("deleteAccountForm");
+            form.submit();
+        }
+    }    
+</script>    
 {% endblock %}

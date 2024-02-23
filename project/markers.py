@@ -1,11 +1,9 @@
-import sqlite3
 from flask import redirect, render_template, request, session
 from connection import getCursor
 
-def add_marker():
+def addMarker():
     """Add a new marker to the Map"""
 
-    db = getCursor()
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/login")
 
@@ -14,6 +12,8 @@ def add_marker():
     
     map_id = session['map_id']
     user_id = session["user_id"]
+    
+    db = getCursor()
     role = db.execute("SELECT role FROM user_roles WHERE user_id = ? AND map_id = ?", ([user_id, map_id])).fetchone()
     if role[0] == "not_activated":
         return render_template("error.html", error = "Only activated users can make reports. Please contact the admins to be activated.")
@@ -49,40 +49,41 @@ def add_marker():
         return render_template("error.html", error = "Invalid coordinates")
     
     amount = int(request.form.get("amount"))
-    neededId = db.execute("SELECT max(id) FROM units").fetchone()[0] + 1
-    # print("Needed id is: " + str(neededId))
-    db.execute("INSERT INTO units(id, user_id, name, lat, lng, country, comment, map_id, amount) values(?, ?, ?, ?, ?, ?, ?, ?, ?)", [neededId, user_id, (str(request.form.get("name"))),
-        lat, lng, str(request.form.get("country")), str(request.form.get("comment")), (map_id), amount])
+    neededId = db.execute("SELECT MAX(id) FROM locations").fetchone()[0] + 1
+    
+    db.execute("INSERT INTO locations(id, name, lat, lng, country, comment, map_id, amount_id) values(?, ?, ?, ?, ?, ?, ?, ?)", 
+               [neededId, (str(request.form.get("name"))), lat, lng, 
+                str(request.form.get("country")), str(request.form.get("comment")), (map_id), amount])
     
     for i in reportedType:
-        db.execute("INSERT INTO unit_relations(unit_id, type_id) values(?, ?)", [neededId, int(i)])
+        db.execute("INSERT INTO type_relations(location_id, type_id) values(?, ?)", [neededId, int(i)])
     
     db.connection.commit()
 
     return redirect("/")
 
 
-def deletemarker():
+def deleteMarker():
     """Remove the marker"""
     
-    db = getCursor()
     if (str(session) == "<FileSystemSession {}>"):
         return redirect("/login")
     
-    map_id = session['map_id']
+    if 'map_id' not in session:
+        return redirect("/selectmap")
     
-    if (type(map_id) == type(None)):
-        return redirect("/selectmap")    
-
+    map_id = session['map_id']
     user_id = session["user_id"]
+    
+    db = getCursor()
     role = db.execute("SELECT role FROM user_roles WHERE user_id = ? AND map_id = ?", ([user_id, map_id])).fetchone()
     if role[0] != "admin":
         return render_template("error.html", error="Markers can only be deleted by admins")
     
     try:
         marker_id = request.form.get("marker_id")
-        db.execute("DELETE FROM units WHERE id = ?", [marker_id])
-        db.execute("DELETE FROM unit_relations WHERE unit_id = ?", [marker_id])
+        db.execute("DELETE FROM locations WHERE id = ?", [marker_id])
+        db.execute("DELETE FROM type_relations WHERE location_id = ?", [marker_id])
         db.connection.commit()
         
         return redirect("/")
