@@ -91,7 +91,7 @@
                             
                             var text = "Are you sure to delete this marker?";
                             idField.setAttribute("value", marker.zIndex);
-                            console.log(marker);
+                            //console.log(marker);
                             
                             if (confirm(text) == true) {
                                 form.submit();
@@ -167,7 +167,7 @@
 
 <div class="horcenter">
     <table>
-        <form action="/report" method="post" style="text-align: center;">
+        <form name="fmLatLng" action="/report" onsubmit="return validateLatLng()" method="post" style="text-align: center;">
             <div class="form-group">
                 <input autocomplete="off" autofocus class="form-control" name="name" placeholder="Name" type="text">
             </div>
@@ -191,7 +191,28 @@
                     </div>
                     {% endfor %}
                 </div>
-                <script type="text/javascript">  // only one selection
+                <script type="text/javascript"> 
+                    function validateLatLng() {
+                        let lat = document.forms["fmLatLng"]["lat"].value;
+                        let lng = document.forms["fmLatLng"]["lng"].value;
+                        let name = document.forms["fmLatLng"]["name"].value;
+                        let amount = document.forms["fmLatLng"]["amount"].value;
+                        if (!lat || !lng || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+                            alert("Invalid coordinates " + lat + ",   " + lng);
+                            return false;
+                        }
+                        if (!name) {
+                            alert("Name should not be empty");
+                            return false;
+                        }
+                        console.log(amount)
+                        if (!amount || amount == "Amount") {
+                            alert("Please select amount");
+                            return false;
+                        }
+                        return true;
+                    }
+                     // only one selection
                     var last;
                     document.addEventListener('input',(e)=>{
                         var closest=e.target.closest("*[data-name='check']");

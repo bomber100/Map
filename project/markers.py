@@ -48,6 +48,9 @@ def addMarker():
     except:
         return render_template("error.html", error = "Invalid coordinates")
     
+    if lat < -90 or lat > 90 or lng < -180 or lng > 180:
+        return render_template("error.html", error="Invalid coordinates")
+    
     amount = int(request.form.get("amount"))
     neededId = db.execute("SELECT MAX(id) FROM locations").fetchone()[0] + 1
     
