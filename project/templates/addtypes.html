@@ -33,7 +33,6 @@
         function validate() {
             let name = document.forms["fmAddType"]["name"].value;
             var errorMessage = document.getElementById("nameError");
-            var isError = false;
             if (!name ) {
                 errorMessage.textContent = "Type cannot be empty.";
                 errorMessage.style.display = "block"; // Make the error message visible

@@ -25,7 +25,7 @@
         function validate() {
             let name = document.forms["fmMap"]["map_name"].value;
             var errorMessage = document.getElementById("mapNameError");
-            var isError = false;
+
             if (!name ) {
                 errorMessage.textContent = "Name cannot be empty.";
                 errorMessage.style.display = "block"; // Make the error message visible
