@@ -5,17 +5,70 @@
 {% endblock %}
 
 {% block body %}
-    <form action="/register" method="post">
+    <form name="fmRegister" action="/register" onsubmit="return validate()" method="post">
         <div class="vertcenter">
         <div class="form-group">
-            <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text">
-            <input autocomplete="off" autofocus class="form-control" name="country" placeholder="Country" type="text">
-            <input autocomplete="off" class="form-control" name="password" placeholder="Password" type="password">
-            <input autocomplete="off" class="form-control" name="confirmation" placeholder="Confirm Password" type="password">
+            <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text" oninput="clearErrorMessage()">
+            <label id="userNameError" style="color: red; display: none; "></label>
+            <input autocomplete="off" autofocus class="form-control" name="country" placeholder="Country" type="text" oninput="clearErrorMessage()">
+            <label id="countryError" style="color: red; display: none; "></label>
+            <input autocomplete="off" class="form-control" name="password" placeholder="Password" type="password" oninput="clearErrorMessage()">
+            <input autocomplete="off" class="form-control" name="confirmation" placeholder="Confirm Password" type="password" oninput="clearErrorMessage()">
+            <label id="passwordError" style="color: red; display: none; "></label>
         </div>
         <center>
-        <button class="btn btn-primary" style="text-align: center;" type="submit">Register</button>
+            <button class="btn btn-primary" style="text-align: center;" type="submit">Register</button>
         </center>
         </div>
     </form>
+    <script type="text/javascript"> 
+        function validate() {            
+            let userName = document.forms["fmRegister"]["username"].value;
+            let pass = document.forms["fmRegister"]["password"].value;
+            let confirm = document.forms["fmRegister"]["confirmation"].value;
+            let country = document.forms["fmRegister"]["country"].value;
+
+            var passwordMessage = document.getElementById("passwordError");
+            var userNameMessage = document.getElementById("userNameError");            
+            var countryMessage = document.getElementById("countryError");            
+
+            if (userName === null || userName.trim() === "") {
+                userNameMessage.textContent = "please provide Username";
+                userNameMessage.style.display = "block"; // Make the error message visible
+                return false;
+            }
+            if (country === null || country.trim() === "") {
+                countryMessage.textContent = "Country cannot be empty";
+                countryMessage.style.display = "block"; // Make the error message visible
+                return false;
+            }
+            if (!pass || !confirm) {
+                passwordMessage.textContent = "please provide Password";
+                passwordMessage.style.display = "block"; // Make the error message visible
+                return false;
+            }
+            if (pass !== confirm) {
+                passwordMessage.textContent = "Passwords are now equal";
+                passwordMessage.style.display = "block"; // Make the error message visible
+                return false;
+            }
+                        
+            if (pass.length < 8) {
+                passwordMessage.textContent = "Password must be at least 8 characters long";
+                passwordMessage.style.display = "block"; // Make the error message visible
+                return false;
+            }
+            return true;
+        }
+
+        function clearErrorMessage() {
+            var errorMessage = document.getElementById("passwordError");
+            errorMessage.style.display = "none"; // Hide the error message
+            var errorMessage = document.getElementById("userNameError");
+            errorMessage.style.display = "none";
+            var errorMessage = document.getElementById("countryError");
+            errorMessage.style.display = "none";
+        }
+    </script>
+
 {% endblock %}

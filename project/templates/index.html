@@ -55,7 +55,6 @@
             var defaultLng = parseFloat('{{ avgPositions[1] }}');
             var initLatLng = {lat: defaultLat, lng: defaultLng};
             
-            console.log(initLatLng);
 
             const mapOptions = {
                 center: initLatLng,
@@ -110,11 +109,11 @@
             google.maps.event.addListener(map, "rightclick", function(event) {
                 var lat = event.latLng.lat();
                 var lng = event.latLng.lng();
-                // populate yor box/field with lat, lng
+                // populate fields with lat, lng
                 var latField = document.querySelector('input[name="lat"][type="text"]');
                 var lngField = document.querySelector('input[name="lng"][type="text"]');
-                latField.setAttribute("value", lat);
-                lngField.setAttribute("value", lng);
+                latField.value = lat;
+                lngField.value = lng;
             });    
         }
         
@@ -191,19 +190,20 @@
                     </div>
                     {% endfor %}
                 </div>
-                <script type="text/javascript"> 
+                <script type="text/javascript">
                     function validateLatLng() {
-                        let lat = document.forms["fmLatLng"]["lat"].value;
-                        let lng = document.forms["fmLatLng"]["lng"].value;
+                        let lat = parseFloat(document.forms["fmLatLng"]["lat"].value);
+                        let lng = parseFloat(document.forms["fmLatLng"]["lng"].value);
                         let name = document.forms["fmLatLng"]["name"].value;
                         let amount = document.forms["fmLatLng"]["amount"].value;
                         const checkboxes = document.querySelectorAll('div[data-name="check"] input[type="checkbox"]');
                         let isTypeSelected = false;
 
-                        if (!lat || !lng || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+                        if (!lat || !lng || isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
                             alert("Invalid coordinates");
                             return false;
                         }
+                        
                         if (!name) {
                             alert("Name should not be empty");
                             return false;
