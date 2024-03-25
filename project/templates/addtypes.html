@@ -8,9 +8,10 @@
 
     <div class="vertcenter">
         <h2 style="text-align: center;">Add Types:</h2>
-        <form action="/addtypes" method="post" style="text-align: center;">
+        <form name="fmAddType" action="/addtypes" onsubmit="return validate()" method="post" style="text-align: center;">
             <div class="form-group">
-                <input autocomplete="off" autofocus class="form-control" name="name" placeholder="Type" type="text">
+                <input autocomplete="off" autofocus class="form-control" name="name" placeholder="Type" type="text" oninput="clearErrorMessage()">
+                <label id="nameError" style="color: red; display: none; "></label>
             </div>
             <button class="btn btn-primary" type="submit">Add</button>
         </form>
@@ -28,5 +29,22 @@
             <button class="btn btn-primary" type="submit">Done</button>
         </form>
     </div>
+    <script type="text/javascript"> 
+        function validate() {
+            let name = document.forms["fmAddType"]["name"].value;
+            var errorMessage = document.getElementById("nameError");
+            var isError = false;
+            if (!name ) {
+                errorMessage.textContent = "Type cannot be empty.";
+                errorMessage.style.display = "block"; // Make the error message visible
+                return false;
+            }
+            return true;
+        }
 
+        function clearErrorMessage() {
+            var errorMessage = document.getElementById("nameError");
+            errorMessage.style.display = "none"; // Hide the error message
+        }
+    </script>
 {% endblock %}

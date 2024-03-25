@@ -8,9 +8,10 @@
 
     <div class="vertcenter">
         <h2 style="text-align: center;">Create New Map:</h2>
-        <form action="/createmap" method="post" style="text-align: center;">
+        <form name="fmMap" action="/createmap" onsubmit="return validate()" method="post" style="text-align: center;">
             <div class="form-group">
-                <input autocomplete="off" autofocus class="form-control" name="map_name" placeholder="Name" type="text">
+                <input autocomplete="off" autofocus class="form-control" name="map_name" placeholder="Name" type="text" oninput="clearErrorMessage()">
+                <label id="mapNameError" style="color: red; display: none; "></label>
             </div>
             <div class="form-group">
                 <input type="checkbox" name="approvalNeeded" id="approvalNeeded" value="True"/>
@@ -19,5 +20,24 @@
             <button class="btn btn-primary" type="submit">Create</button>
         </form>
     </div>
+
+    <script type="text/javascript"> 
+        function validate() {
+            let name = document.forms["fmMap"]["map_name"].value;
+            var errorMessage = document.getElementById("mapNameError");
+            var isError = false;
+            if (!name ) {
+                errorMessage.textContent = "Name cannot be empty.";
+                errorMessage.style.display = "block"; // Make the error message visible
+                return false;
+            }
+            return true;
+        }
+
+        function clearErrorMessage() {
+            var errorMessage = document.getElementById("mapNameError");
+            errorMessage.style.display = "none"; // Hide the error message
+        }
+    </script>
 
 {% endblock %}

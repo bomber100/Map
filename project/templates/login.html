@@ -8,11 +8,14 @@
 
     <div class="vertcenter">
         <h2 style="text-align: center;">Log In:</h2>
-        <form action="/login" method="post" style="text-align: center;">
+        <form name="fmLogin" action="/login" onsubmit="return validateLogin()" method="post" style="text-align: center;">
             <div class="form-group">
-                <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text">
-                <input class="form-control" name="password" placeholder="Password" type="password">
+                <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text" oninput="clearErrorMessage()">
+                <label id="usernameError" style="color: red; display: none; "></label>
+                <input class="form-control" name="password" placeholder="Password" type="password" oninput="clearErrorMessage()">
+                <label id="passwordError" style="color: red; display: none; "></label>
             </div>
+            
             <div style="padding: 10%;"></div>
             <div>
                 <button class="btn btn-primary" type="submit">Log In</button>
@@ -23,7 +26,33 @@
                 <button class="btn btn-primary" type="submit">Register</button>
             </form>
         </div>
-        
     </div>
+    <script type="text/javascript"> 
+        function validateLogin() {
+            let username = document.forms["fmLogin"]["username"].value;
+            let pass = document.forms["fmLogin"]["password"].value;
+            var errorMessageUser = document.getElementById("usernameError");
+            var errorMessagePass = document.getElementById("passwordError");
+            var isError = false;
+            if (!username ) {
+                errorMessageUser.textContent = "cannot be empty.";
+                errorMessageUser.style.display = "block"; // Make the error message visible
+                isError = true;
+            }
+            if (!pass) {
+                errorMessagePass.textContent = "cannot be empty.";
+                errorMessagePass.style.display = "block"; // Make the error message visible
+                isError = true;
+            }
+            return !isError;
+        }
+
+        function clearErrorMessage() {
+            var errorMessageUser = document.getElementById("usernameError");
+            var errorMessagePass = document.getElementById("passwordError");
+            errorMessageUser.style.display = "none"; // Hide the error message
+            errorMessagePass.style.display = "none";
+        }
+    </script>
 
 {% endblock %}

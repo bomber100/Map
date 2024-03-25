@@ -59,7 +59,13 @@
 
     function doInsertAmount() {
         let newAmount = prompt("Enter new Amount")
-        if (newAmount != null) {
+        if (newAmount == null){
+            return;
+        }
+        if (newAmount.trim() === "") {
+            alert("You must enter a value.");
+        } else {
+            console.log("newAmount = " + newAmount);
             execSQL("insert", "", newAmount);
         }
     }

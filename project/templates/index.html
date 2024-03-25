@@ -197,19 +197,33 @@
                         let lng = document.forms["fmLatLng"]["lng"].value;
                         let name = document.forms["fmLatLng"]["name"].value;
                         let amount = document.forms["fmLatLng"]["amount"].value;
+                        const checkboxes = document.querySelectorAll('div[data-name="check"] input[type="checkbox"]');
+                        let isTypeSelected = false;
+
                         if (!lat || !lng || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-                            alert("Invalid coordinates " + lat + ",   " + lng);
+                            alert("Invalid coordinates");
                             return false;
                         }
                         if (!name) {
                             alert("Name should not be empty");
                             return false;
                         }
-                        console.log(amount)
+                        
                         if (!amount || amount == "Amount") {
                             alert("Please select amount");
                             return false;
                         }
+
+                        for (let i = 0; i < checkboxes.length; i++) {
+                            if (checkboxes[i].checked) {
+                                isTypeSelected = true;
+                                break;
+                            }
+                        }                        
+                        if (!isTypeSelected) {
+                            alert("Please select at least one type.");
+                            return false;
+                        }                        
                         return true;
                     }
                      // only one selection

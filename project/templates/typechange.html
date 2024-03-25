@@ -59,7 +59,12 @@
 
     function doInsertType() {
         let newType = prompt("Enter new Type")
-        if (newType != null) {
+        if (newType == null){
+            return;
+        }
+        if (newType.trim() === "") {
+            alert("You must enter a value.");
+        } else {
             execSQL("insert", "", newType);
         }
     }
