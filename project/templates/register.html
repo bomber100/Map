@@ -5,8 +5,10 @@
 {% endblock %}
 
 {% block body %}
+<div class="vertcenter">
+<h2 style="text-align: center;">Register:</h2>
     <form name="fmRegister" action="/register" onsubmit="return validate()" method="post">
-        <div class="vertcenter">
+        
         <div class="form-group">
             <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text" oninput="clearErrorMessage()">
             <label id="userNameError" style="color: red; display: none; "></label>
@@ -19,8 +21,8 @@
         <center>
             <button class="btn btn-primary" style="text-align: center;" type="submit">Register</button>
         </center>
-        </div>
     </form>
+</div>
     <script type="text/javascript"> 
         function validate() {            
             let userName = document.forms["fmRegister"]["username"].value;
