@@ -17,7 +17,7 @@ def index():
     
     role = getUserRole(user_id, map_id)
     if role == "not_activated":
-        return render_template("error.html", error = "Your account is not activated. Please contact the admins to be activated")
+        return render_template("error.html", error = "Your account is currently inactive. An activation request has been forwarded to the administrators.")
     
     if role == "admin":
         isAdmin = True
@@ -31,16 +31,17 @@ def index():
     map_name = db.execute("SELECT name FROM maps WHERE id = ?", [map_id]).fetchone()
     unitAmount = []
 
+    
+    reportedMarkers = db.execute("SELECT name, lat, lng, id, comment FROM locations WHERE map_id = ?", [map_id]).fetchall()
+    if len(reportedMarkers) > 0:
+        avgPositions = db.execute("SELECT avg(lat), avg(lng) FROM locations WHERE map_id = ?", [map_id]).fetchone()
+        
+    for marker in reportedMarkers:
+        json = makeJson(marker)
+        markers.append(json)
+
     if isAdmin == True:
-        reportedMarkers = db.execute("SELECT name, lat, lng, id, comment FROM locations WHERE map_id = ?", [map_id]).fetchall()
-        if len(reportedMarkers) > 0:
-            avgPositions = db.execute("SELECT avg(lat), avg(lng) FROM locations WHERE map_id = ?", [map_id]).fetchone()
-        
         adminVisibility = ""
-        
-        for marker in reportedMarkers:
-            json = makeJson(marker)
-            markers.append(json)
 
     return render_template("index.html", types = types, markers = markers, adminVisibility = adminVisibility, amounts = amounts, unitAmount = unitAmount, map_name = map_name, avgPositions = avgPositions)
 
@@ -62,8 +63,7 @@ def makeJson(marker):
         marker_amount = str(unitAmount[1])
 
     if(len(marker_type) > 1):
-        marker_type = marker_type[:-1]
-        marker_type = marker_type[:-1]
+        marker_type = marker_type[:-2]
 
     # Remove the last ", " elements
     comment = marker[4]
@@ -75,11 +75,10 @@ def makeJson(marker):
 
 def getUserRole(user_id, map_id):
     db = getCursor()
-
     role = db.execute("SELECT role FROM user_roles WHERE user_id = ? AND map_id = ?", ([user_id, map_id])).fetchone()
-    approvalNeeded = db.execute("SELECT approval_needed FROM maps WHERE id = ?", [map_id]).fetchone()
-
+    
     if type(role) == type(None):
+        approvalNeeded = db.execute("SELECT approval_needed FROM maps WHERE id = ?", [map_id]).fetchone()
         if (approvalNeeded[0]):
             roleName = "not_activated"
         else:
